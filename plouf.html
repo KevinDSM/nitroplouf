@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Plouf Plouf - Répartition des Groupes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .player-list {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .player {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px;
+            width: 180px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .player.selected {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.5);
+        }
+        .player input[type="checkbox"].select-player {
+            display: none;
+        }
+        .player-name {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .player-role {
+            font-size: 14px;
+            color: #666;
+        }
+        .secondary-role {
+            margin-top: 5px;
+            font-size: 13px;
+        }
+        .secondary-role input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .dp-score {
+            font-size: 13px;
+            color: #444;
+            display: none; /* Caché par défaut */
+        }
+        .btn {
+            display: block;
+            margin: 20px auto;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        #commandBtn {
+            background-color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin-top: 30px;
+            padding: 0;
+        }
+        #commandBtn:hover {
+            background-color: #333;
+        }
+        #commandTerminal {
+            display: none; /* Caché par défaut */
+            margin-top: 20px;
+            text-align: center;
+        }
+        #commandInput {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #result {
+            margin-top: 30px;
+        }
+        .group {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .group h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #007bff;
+        }
+        .group table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .group th, .group td {
+            padding: 10px;
+            text-align: left;
+        }
+        .group th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .group tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .no-player {
+            color: red;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Plouf Plouf - Répartition des Groupes</h1>
+
+<div class="player-list" id="playerForm">
+    <!-- La liste des joueurs sera générée ici -->
+</div>
+
+<button class="btn" onclick="generateGroups()">Lancer le Plouf Plouf</button>
+
+<!-- Bouton pour ouvrir le terminal de commande -->
+<button class="btn" id="commandBtn" onclick="toggleCommandTerminal()"></button>
+
+<!-- Terminal de commande -->
+<div id="commandTerminal">
+    <input type="text" id="commandInput" placeholder="Entrez une commande..." onkeydown="handleCommand(event)">
+</div>
+
+<div id="result"></div>
+
+<script>
+    // Variables globales
+    let dpMode = false;
+    let showDp = false;
+
+    // Liste des joueurs avec leurs rôles, éventuelles spés secondaires et points DP
+    const players = [
+        {name: 'Houine', mainRole: 'Tank', dp: 8},
+        {name: 'Roukii', mainRole: 'DPS', dp: 8},
+        {name: 'Toto', mainRole: 'DPS', dp: 8},
+        {name: 'Kri', mainRole: 'DPS', secondaryRole: 'Tank', dp: 8},
+        {name: 'Champka', mainRole: 'Heal', dp: 8},
+        {name: 'Sindo', mainRole: 'DPS', secondaryRole: 'Tank', dp: 7},
+        {name: 'Kuro', mainRole: 'DPS', dp: 6},
+        {name: 'Insta', mainRole: 'Heal', secondaryRole: 'DPS', dp: 5},
+        {name: 'Percy', mainRole: 'Heal', dp: 6},
+        {name: 'Foyn', mainRole: 'DPS', dp: 4},
+        {name: 'Eistre', mainRole: 'DPS', dp: 5},
+        {name: 'Degun', mainRole: 'DPS', dp: 5},
+        {name: 'Filé', mainRole: 'DPS', dp: 3},
+        {name: 'Fenrir', mainRole: 'DPS', dp: 5},
+        {name: 'Pasici', mainRole: 'DPS', secondaryRole: 'Heal', dp: 8},
+        {name: 'Shoren', mainRole: 'DPS', dp: 4},
+        {name: 'Kiroy', mainRole: 'DPS', dp: 3}
+    ];
+
+    // Génération du formulaire des joueurs
+    function generatePlayerList() {
+        playerForm.innerHTML = '';
+        players.forEach((player, index) => {
+            const div = document.createElement('div');
+            div.className = 'player';
+            div.dataset.index = index;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'select-player';
+            checkbox.id = 'player' + index;
+            checkbox.name = 'players';
+            checkbox.value = index;
+
+            const nameSpan = document.createElement('div');
+            nameSpan.className = 'player-name';
+            nameSpan.textContent = player.name;
+
+            const roleSpan = document.createElement('div');
+            roleSpan.className = 'player-role';
+            roleSpan.textContent = `Rôle principal : ${player.mainRole}`;
+
+            div.appendChild(checkbox);
+            div.appendChild(nameSpan);
+            div.appendChild(roleSpan);
+
+            // Afficher les DP si showDp est activé
+            if (showDp) {
+                const dpSpan = document.createElement('div');
+                dpSpan.className = 'dp-score';
+                dpSpan.textContent = `DP : ${player.dp}`;
+                dpSpan.style.display = 'block';
+                div.appendChild(dpSpan);
+            }
+
+            // Si le joueur a une spé secondaire
+            if (player.secondaryRole) {
+                const secondaryDiv = document.createElement('div');
+                secondaryDiv.className = 'secondary-role';
+
+                const secondaryCheckbox = document.createElement('input');
+                secondaryCheckbox.type = 'checkbox';
+                secondaryCheckbox.id = 'secondary' + index;
+                secondaryCheckbox.name = 'secondary' + index;
+                secondaryCheckbox.value = 'true';
+
+                const secondaryLabel = document.createElement('label');
+                secondaryLabel.htmlFor = 'secondary' + index;
+                secondaryLabel.innerHTML = `Utiliser spé secondaire (${player.secondaryRole})`;
+
+                secondaryDiv.appendChild(secondaryCheckbox);
+                secondaryDiv.appendChild(secondaryLabel);
+
+                div.appendChild(secondaryDiv);
+            }
+
+            // Rendre toute la carte cliquable pour sélectionner le joueur
+            div.addEventListener('click', function(e) {
+                // Si on clique sur un élément interactif, ne pas sélectionner/désélectionner le joueur
+                if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'label') {
+                    return;
+                }
+                checkbox.checked = !checkbox.checked;
+                div.classList.toggle('selected', checkbox.checked);
+            });
+
+            // Mettre à jour la classe 'selected' lorsque la case est cochée/décochée
+            checkbox.addEventListener('change', function() {
+                div.classList.toggle('selected', checkbox.checked);
+            });
+
+            playerForm.appendChild(div);
+        });
+    }
+
+    const playerForm = document.getElementById('playerForm');
+    generatePlayerList();
+
+    function shuffle(array) {
+        array.sort(() => Math.random() - 0.5);
+    }
+
+    function generateGroups() {
+        const selectedPlayers = [];
+        players.forEach((player, index) => {
+            const playerCheckbox = document.getElementById('player' + index);
+            if (playerCheckbox.checked) {
+                const secondaryCheckbox = document.getElementById('secondary' + index);
+                selectedPlayers.push({...player, useSecondary: secondaryCheckbox ? secondaryCheckbox.checked : false});
+            }
+        });
+
+        if (selectedPlayers.length === 0) {
+            alert('Veuillez sélectionner au moins un joueur.');
+            return;
+        }
+
+        // Calculer le nombre optimal de groupes pour équilibrer les joueurs
+        let totalPlayers = selectedPlayers.length;
+        let maxGroupSize = 5;
+        let minGroupSize = 4; // On permet des groupes de 4 pour équilibrer
+
+        // Calculer le nombre de groupes de manière à équilibrer le nombre de joueurs
+        let numGroups = Math.floor(totalPlayers / maxGroupSize);
+        if (totalPlayers % maxGroupSize !== 0) {
+            numGroups += 1;
+        }
+
+        // Si cela conduit à des groupes trop petits, on ajuste
+        while (totalPlayers / numGroups < minGroupSize) {
+            numGroups += 1;
+        }
+
+        // Répartir les joueurs par rôle
+        let tanks = selectedPlayers.filter(p => p.mainRole === 'Tank' && !p.useSecondary);
+        let heals = selectedPlayers.filter(p => p.mainRole === 'Heal' && !p.useSecondary);
+        let dps = selectedPlayers.filter(p => p.mainRole === 'DPS' && !p.useSecondary);
+
+        // Utiliser les spés secondaires si nécessaire
+        let secondaryTanks = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'Tank');
+        let secondaryHeals = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'Heal');
+        let secondaryDps = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'DPS');
+
+        // Mélanger les listes
+        shuffle(tanks);
+        shuffle(heals);
+        shuffle(dps);
+        shuffle(secondaryTanks);
+        shuffle(secondaryHeals);
+        shuffle(secondaryDps);
+
+        // Combiner les listes
+        tanks = tanks.concat(secondaryTanks);
+        heals = heals.concat(secondaryHeals);
+        dps = dps.concat(secondaryDps);
+
+        // Initialiser les groupes
+        const groups = [];
+        for (let i = 0; i < numGroups; i++) {
+            groups.push({Tank: null, Heal: null, DPS: [], members: [], totalDp: 0});
+        }
+
+        // Répartir les Tanks
+        for (let i = 0; i < tanks.length; i++) {
+            const groupIndex = i % numGroups;
+            if (!groups[groupIndex].Tank) {
+                groups[groupIndex].Tank = tanks[i];
+                groups[groupIndex].members.push(tanks[i]);
+                groups[groupIndex].totalDp += tanks[i].dp;
+            }
+        }
+
+        // Répartir les Heals
+        for (let i = 0; i < heals.length; i++) {
+            const groupIndex = i % numGroups;
+            if (!groups[groupIndex].Heal) {
+                groups[groupIndex].Heal = heals[i];
+                groups[groupIndex].members.push(heals[i]);
+                groups[groupIndex].totalDp += heals[i].dp;
+            }
+        }
+
+        // Répartir les DPS en fonction du mode DP
+        if (dpMode) {
+            // Trier les DPS par DP décroissant
+            dps.sort((a, b) => b.dp - a.dp);
+
+            // Répartir les DPS pour équilibrer les DP totaux des groupes
+            for (let i = 0; i < dps.length; i++) {
+                // Trouver le groupe avec le DP total le plus bas
+                groups.sort((a, b) => a.totalDp - b.totalDp);
+                groups[0].DPS.push(dps[i]);
+                groups[0].members.push(dps[i]);
+                groups[0].totalDp += dps[i].dp;
+            }
+        } else {
+            // Répartir les DPS de manière circulaire
+            let dpsIndex = 0;
+            while (dpsIndex < dps.length) {
+                for (let i = 0; i < numGroups; i++) {
+                    if (dpsIndex >= dps.length) break;
+                    groups[i].DPS.push(dps[dpsIndex]);
+                    groups[i].members.push(dps[dpsIndex]);
+                    dpsIndex++;
+                }
+            }
+        }
+
+        // Ajuster les groupes pour équilibrer le nombre de joueurs
+        let needAdjustment = true;
+        while (needAdjustment) {
+            needAdjustment = false;
+            groups.sort((a, b) => b.members.length - a.members.length);
+            let groupMax = groups[0];
+            let groupMin = groups[groups.length - 1];
+            if (groupMax.members.length - groupMin.members.length > 1) {
+                // Déplacer un joueur du groupe le plus grand vers le plus petit
+                let playerToMove = groupMax.DPS.pop();
+                if (!playerToMove) {
+                    if (groupMax.Heal && !groupMin.Heal) {
+                        playerToMove = groupMax.Heal;
+                        groupMax.Heal = null;
+                        groupMin.Heal = playerToMove;
+                    } else if (groupMax.Tank && !groupMin.Tank) {
+                        playerToMove = groupMax.Tank;
+                        groupMax.Tank = null;
+                        groupMin.Tank = playerToMove;
+                    } else {
+                        break;
+                    }
+                }
+                groupMax.members.splice(groupMax.members.indexOf(playerToMove), 1);
+                groupMax.totalDp -= playerToMove.dp;
+                groupMin.members.push(playerToMove);
+                groupMin.totalDp += playerToMove.dp;
+                if (playerToMove.mainRole === 'DPS' || playerToMove.useSecondary && playerToMove.secondaryRole === 'DPS') {
+                    groupMin.DPS.push(playerToMove);
+                } else if (playerToMove.mainRole === 'Heal' || playerToMove.useSecondary && playerToMove.secondaryRole === 'Heal') {
+                    groupMin.Heal = playerToMove;
+                } else if (playerToMove.mainRole === 'Tank' || playerToMove.useSecondary && playerToMove.secondaryRole === 'Tank') {
+                    groupMin.Tank = playerToMove;
+                }
+                needAdjustment = true;
+            }
+        }
+
+        // Affichage des groupes
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '';
+        groups.forEach((group, index) => {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group';
+
+            const groupTitle = document.createElement('h3');
+            groupTitle.textContent = `Groupe ${index + 1}`;
+            groupDiv.appendChild(groupTitle);
+
+            const table = document.createElement('table');
+
+            // En-tête du tableau
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const thName = document.createElement('th');
+            thName.textContent = 'Joueur';
+            const thRole = document.createElement('th');
+            thRole.textContent = 'Rôle';
+            headerRow.appendChild(thName);
+            headerRow.appendChild(thRole);
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+
+            if (group.Tank) {
+                const row = document.createElement('tr');
+                const cellName = document.createElement('td');
+                cellName.textContent = group.Tank.name;
+                const cellRole = document.createElement('td');
+                cellRole.textContent = 'Tank';
+                row.appendChild(cellName);
+                row.appendChild(cellRole);
+                tbody.appendChild(row);
+            }
+
+            if (group.Heal) {
+                const row = document.createElement('tr');
+                const cellName = document.createElement('td');
+                cellName.textContent = group.Heal.name;
+                const cellRole = document.createElement('td');
+                cellRole.textContent = 'Heal';
+                row.appendChild(cellName);
+                row.appendChild(cellRole);
+                tbody.appendChild(row);
+            }
+
+            group.DPS.forEach(player => {
+                const row = document.createElement('tr');
+                const cellName = document.createElement('td');
+                cellName.textContent = player.name;
+                const cellRole = document.createElement('td');
+                cellRole.textContent = 'DPS';
+                row.appendChild(cellName);
+                row.appendChild(cellRole);
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            groupDiv.appendChild(table);
+
+            // Ne pas afficher le total DP du groupe si le mode DP est activé
+            /*
+            if (dpMode) {
+                const dpTotalDiv = document.createElement('div');
+                dpTotalDiv.style.marginTop = '10px';
+                dpTotalDiv.style.fontWeight = 'bold';
+                dpTotalDiv.textContent = `Total DP du groupe : ${group.totalDp}`;
+                groupDiv.appendChild(dpTotalDiv);
+            }
+            */
+
+            resultDiv.appendChild(groupDiv);
+        });
+    }
+
+    // Gestion du terminal de commande
+    function toggleCommandTerminal() {
+        const terminal = document.getElementById('commandTerminal');
+        terminal.style.display = terminal.style.display === 'none' ? 'block' : 'none';
+        document.getElementById('commandInput').focus();
+    }
+
+    function handleCommand(event) {
+        if (event.key === 'Enter') {
+            const command = event.target.value.trim().toLowerCase();
+            if (command === 'dp') {
+                dpMode = true;
+                alert('Mode DP activé. Les groupes seront équilibrés en fonction des points DP.');
+            } else if (command === 'show dp' || command === 'showdp') {
+                showDp = true;
+                generatePlayerList();
+            } else {
+                alert('Commande non reconnue.');
+            }
+            event.target.value = '';
+        }
+    }
+</script>
+
+</body>
+</html>
