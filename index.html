@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Plouf Plouf - Répartition des Groupes</title>
     <style>
+        /* Styles inchangés */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
@@ -171,6 +172,7 @@
         {name: 'Kiroy', mainRole: 'DPS', dp: 3}
     ];
 
+    // Sauvegarder les DP par défaut
     players.forEach(player => {
         defaultDpValues[player.name] = player.dp;
     });
@@ -256,7 +258,7 @@
         const selectedPlayers = [];
         players.forEach((player, index) => {
             const playerCheckbox = document.getElementById('player' + index);
-            if (playerCheckbox.checked) {
+            if (playerCheckbox && playerCheckbox.checked) {
                 const secondaryCheckbox = document.getElementById('secondary' + index);
                 selectedPlayers.push({...player, useSecondary: secondaryCheckbox ? secondaryCheckbox.checked : false});
             }
@@ -267,15 +269,27 @@
             return;
         }
 
-        let totalPlayers = selectedPlayers.length;
-        let maxGroupSize = 5;
-        let minGroupSize = 4;
-        let numGroups = Math.floor(totalPlayers / maxGroupSize);
-        if (totalPlayers % maxGroupSize !== 0) {
-            numGroups += 1;
-        }
-        while (totalPlayers / numGroups < minGroupSize) {
-            numGroups += 1;
+        // Séparer les joueurs par rôle, en priorisant les rôles principaux
+        let tanks = selectedPlayers.filter(p => p.mainRole === 'Tank' && !p.useSecondary);
+        let heals = selectedPlayers.filter(p => p.mainRole === 'Heal' && !p.useSecondary);
+        let dps = selectedPlayers.filter(p => p.mainRole === 'DPS' && !p.useSecondary);
+
+        // Ajouter les joueurs en spé secondaire si nécessaire
+        let secondaryTanks = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'Tank');
+        let secondaryHeals = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'Heal');
+        let secondaryDps = selectedPlayers.filter(p => p.useSecondary && p.secondaryRole === 'DPS');
+
+        // Calculer le nombre de groupes nécessaires
+        const maxDpsPerGroup = 3;
+        const numHeals = heals.length + secondaryHeals.length;
+        const numDps = dps.length + secondaryDps.length;
+
+        let numGroups = Math.ceil(numDps / maxDpsPerGroup);
+        numGroups = Math.max(numGroups, heals.length);
+
+        if (heals.length + secondaryHeals.length < numGroups) {
+            alert('Pas assez de Heals pour remplir tous les groupes. Veuillez activer des spés secondaires pour les Heals ou réduire le nombre de DPS.');
+            return;
         }
 
         const groups = [];
@@ -283,117 +297,92 @@
             groups.push({Tank: null, Heal: null, DPS: [], members: [], totalDp: 0});
         }
 
-        if (cheatPlayers.length > 0) {
-            const firstGroup = groups[0];
-            cheatPlayers.forEach(playerName => {
-                const playerIndex = selectedPlayers.findIndex(p => p.name.toLowerCase() === playerName.toLowerCase());
-                if (playerIndex !== -1) {
-                    const player = selectedPlayers.splice(playerIndex, 1)[0];
-                    if ((player.mainRole === 'Tank' && !player.useSecondary) || (player.useSecondary && player.secondaryRole === 'Tank')) {
-                        if (!firstGroup.Tank) {
-                            firstGroup.Tank = player;
-                        } else {
-                            firstGroup.DPS.push(player);
-                        }
-                    } else if ((player.mainRole === 'Heal' && !player.useSecondary) || (player.useSecondary && player.secondaryRole === 'Heal')) {
-                        if (!firstGroup.Heal) {
-                            firstGroup.Heal = player;
-                        } else {
-                            firstGroup.DPS.push(player);
-                        }
-                    } else {
-                        firstGroup.DPS.push(player);
-                    }
-                    firstGroup.members.push(player);
-                    firstGroup.totalDp += player.dp;
-                }
-            });
-        }
-
-        let tanks = selectedPlayers.filter(p => (p.mainRole === 'Tank' && !p.useSecondary) || (p.useSecondary && p.secondaryRole === 'Tank'));
-        let heals = selectedPlayers.filter(p => (p.mainRole === 'Heal' && !p.useSecondary) || (p.useSecondary && p.secondaryRole === 'Heal'));
-        let dps = selectedPlayers.filter(p => (p.mainRole === 'DPS' && !p.useSecondary) || (p.useSecondary && p.secondaryRole === 'DPS'));
-
-        shuffle(tanks);
-        shuffle(heals);
-        shuffle(dps);
-
-        let tankIndex = 0;
-        for (let i = 0; i < groups.length; i++) {
-            if (!groups[i].Tank && tankIndex < tanks.length) {
-                groups[i].Tank = tanks[tankIndex];
-                groups[i].members.push(tanks[tankIndex]);
-                groups[i].totalDp += tanks[tankIndex].dp;
-                tankIndex++;
-            }
-        }
-
-        let healIndex = 0;
-        for (let i = 0; i < groups.length; i++) {
-            if (!groups[i].Heal && healIndex < heals.length) {
-                groups[i].Heal = heals[healIndex];
-                groups[i].members.push(heals[healIndex]);
-                groups[i].totalDp += heals[healIndex].dp;
-                healIndex++;
-            }
-        }
-
-        if (dpMode) {
-            dps.sort((a, b) => b.dp - a.dp);
-            dps.forEach(player => {
-                groups.sort((a, b) => a.totalDp - b.totalDp);
-                groups[0].DPS.push(player);
-                groups[0].members.push(player);
-                groups[0].totalDp += player.dp;
-            });
-        } else {
-            let dpsIndex = 0;
-            while (dpsIndex < dps.length) {
-                for (let i = 0; i < groups.length; i++) {
-                    if (dpsIndex >= dps.length) break;
-                    groups[i].DPS.push(dps[dpsIndex]);
-                    groups[i].members.push(dps[dpsIndex]);
-                    dpsIndex++;
+        // Affecter les Heals principaux
+        heals.forEach((heal, index) => {
+            const groupIndex = index % numGroups;
+            if (!groups[groupIndex].Heal) {
+                groups[groupIndex].Heal = heal;
+                groups[groupIndex].members.push(heal);
+                if (dpMode) {
+                    groups[groupIndex].totalDp += heal.dp;
                 }
             }
-        }
+        });
 
-        let needAdjustment = true;
-        while (needAdjustment) {
-            needAdjustment = false;
-            groups.sort((a, b) => b.members.length - a.members.length);
-            let groupMax = groups[0];
-            let groupMin = groups[groups.length - 1];
-            if (groupMax.members.length - groupMin.members.length > 1) {
-                let playerToMove = groupMax.DPS.pop();
-                if (!playerToMove) {
-                    if (groupMax.Heal && !groupMin.Heal) {
-                        playerToMove = groupMax.Heal;
-                        groupMax.Heal = null;
-                        groupMin.Heal = playerToMove;
-                    } else if (groupMax.Tank && !groupMin.Tank) {
-                        playerToMove = groupMax.Tank;
-                        groupMax.Tank = null;
-                        groupMin.Tank = playerToMove;
-                    } else {
+        // Affecter les Heals secondaires si nécessaire
+        if (heals.length < numGroups) {
+            secondaryHeals.forEach((heal, index) => {
+                for (let i = 0; i < numGroups; i++) {
+                    if (!groups[i].Heal) {
+                        groups[i].Heal = heal;
+                        groups[i].members.push(heal);
+                        if (dpMode) {
+                            groups[i].totalDp += heal.dp;
+                        }
                         break;
                     }
                 }
-                groupMax.members.splice(groupMax.members.indexOf(playerToMove), 1);
-                groupMax.totalDp -= playerToMove.dp;
-                groupMin.members.push(playerToMove);
-                groupMin.totalDp += playerToMove.dp;
-                if ((playerToMove.mainRole === 'DPS' && !playerToMove.useSecondary) || (playerToMove.useSecondary && playerToMove.secondaryRole === 'DPS')) {
-                    groupMin.DPS.push(playerToMove);
-                } else if ((playerToMove.mainRole === 'Heal' && !playerToMove.useSecondary) || (playerToMove.useSecondary && playerToMove.secondaryRole === 'Heal')) {
-                    groupMin.Heal = playerToMove;
-                } else if ((playerToMove.mainRole === 'Tank' && !playerToMove.useSecondary) || (playerToMove.useSecondary && playerToMove.secondaryRole === 'Tank')) {
-                    groupMin.Tank = playerToMove;
+            });
+        }
+
+        // Affecter les Tanks principaux
+        tanks.forEach((tank, index) => {
+            const groupIndex = index % numGroups;
+            if (!groups[groupIndex].Tank) {
+                groups[groupIndex].Tank = tank;
+                groups[groupIndex].members.push(tank);
+                if (dpMode) {
+                    groups[groupIndex].totalDp += tank.dp;
                 }
-                needAdjustment = true;
+            }
+        });
+
+        // Affecter les Tanks secondaires si nécessaire
+        if (tanks.length < numGroups) {
+            secondaryTanks.forEach((tank, index) => {
+                for (let i = 0; i < numGroups; i++) {
+                    if (!groups[i].Tank) {
+                        groups[i].Tank = tank;
+                        groups[i].members.push(tank);
+                        if (dpMode) {
+                            groups[i].totalDp += tank.dp;
+                        }
+                        break;
+                    }
+                }
+            });
+        }
+
+        // Répartir les DPS
+        let allDps = dps.concat(secondaryDps);
+        if (dpMode) {
+            allDps.sort((a, b) => b.dp - a.dp);
+        } else {
+            shuffle(allDps);
+        }
+
+        let groupIndex = 0;
+        allDps.forEach(dpsPlayer => {
+            if (groups[groupIndex].DPS.length >= maxDpsPerGroup) {
+                groupIndex = (groupIndex + 1) % numGroups;
+            }
+            groups[groupIndex].DPS.push(dpsPlayer);
+            groups[groupIndex].members.push(dpsPlayer);
+            if (dpMode) {
+                groups[groupIndex].totalDp += dpsPlayer.dp;
+            }
+            groupIndex = (groupIndex + 1) % numGroups;
+        });
+
+        // Vérifier le nombre de DPS par groupe
+        for (let i = 0; i < groups.length; i++) {
+            if (groups[i].DPS.length > maxDpsPerGroup) {
+                alert(`Le groupe ${i + 1} a plus de ${maxDpsPerGroup} DPS. Veuillez vérifier les sélections.`);
+                return;
             }
         }
 
+        // Affichage des groupes
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '';
         groups.forEach((group, index) => {
@@ -468,10 +457,10 @@
     function handleCommand(event) {
         if (event.key === 'Enter') {
             const input = event.target.value.trim();
-            const command = input.toLowerCase();
             const args = input.split(' ');
+            const command = args[0].toLowerCase();
 
-            if (command.startsWith('change dp ')) {
+            if (command === 'change' && args[1].toLowerCase() === 'dp') {
                 if (args.length >= 4) {
                     const playerName = args[2];
                     const newDp = parseInt(args[3], 10);
@@ -492,7 +481,7 @@
                 } else {
                     alert('Usage : change dp NomDuJoueur NouvelleValeurDP');
                 }
-            } else if (command === 'no change dp') {
+            } else if (command === 'no' && args[1].toLowerCase() === 'change' && args[2].toLowerCase() === 'dp') {
                 players.forEach(player => {
                     player.dp = defaultDpValues[player.name];
                 });
@@ -500,21 +489,47 @@
                 if (showDp) {
                     generatePlayerList();
                 }
-            } else if (command.startsWith('cheat ')) {
+            } else if (command === 'cheat') {
                 cheatPlayers = args.slice(1).map(name => name.toLowerCase());
                 alert(`Cheat activé pour les joueurs : ${cheatPlayers.join(', ')}.`);
             } else if (command === 'dp') {
                 dpMode = true;
                 alert('Mode DP activé. Les groupes seront équilibrés en fonction des points DP.');
-            } else if (command === 'show dp' || command === 'showdp') {
+            } else if (command === 'show' && args[1].toLowerCase() === 'dp') {
                 showDp = true;
                 generatePlayerList();
-            } else if (command === 'no dp') {
+            } else if (command === 'no' && args[1].toLowerCase() === 'dp') {
                 dpMode = false;
                 alert('Mode DP désactivé.');
-            } else if (command === 'no show dp' || command === 'noshow dp' || command === 'no showdp' || command === 'noshowdp') {
+            } else if (command === 'no' && args[1].toLowerCase() === 'show' && args[2].toLowerCase() === 'dp') {
                 showDp = false;
                 generatePlayerList();
+            } else if (command === 'add') {
+                if (args.length >= 3) {
+                    const name = args[1];
+                    const mainRole = args[2].toUpperCase();
+                    let secondaryRole = null;
+                    let dp = 0;
+
+                    if (['DPS', 'HEAL', 'TANK'].includes(mainRole)) {
+                        if (args.length >= 4 && ['DPS', 'HEAL', 'TANK'].includes(args[3].toUpperCase())) {
+                            secondaryRole = args[3].toUpperCase();
+                            if (args.length >= 5 && !isNaN(parseInt(args[4], 10))) {
+                                dp = parseInt(args[4], 10);
+                            }
+                        } else if (args.length >= 4 && !isNaN(parseInt(args[3], 10))) {
+                            dp = parseInt(args[3], 10);
+                        }
+                        players.push({name, mainRole, secondaryRole, dp});
+                        defaultDpValues[name] = dp;
+                        alert(`Joueur ${name} ajouté avec le rôle ${mainRole}${secondaryRole ? ' et le rôle secondaire ' + secondaryRole : ''}${dp ? ' et ' + dp + ' DP' : ''}.`);
+                        generatePlayerList();
+                    } else {
+                        alert('Rôle principal invalide. Utilisez DPS, HEAL ou TANK.');
+                    }
+                } else {
+                    alert('Usage : add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]');
+                }
             } else {
                 alert('Commande non reconnue.');
             }
