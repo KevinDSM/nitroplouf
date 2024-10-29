@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Plouf Plouf - Répartition des Groupes</title>
     <style>
-        /* Vos styles CSS existants */
+        /* Styles CSS */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
@@ -302,16 +302,8 @@
 
         // Calculer le nombre de groupes nécessaires
         const maxDpsPerGroup = 3;
-        const numHeals = heals.length + secondaryHeals.length;
         const numDps = dps.length + secondaryDps.length;
-
         let numGroups = Math.ceil(numDps / maxDpsPerGroup);
-        numGroups = Math.max(numGroups, heals.length);
-
-        if (heals.length + secondaryHeals.length < numGroups) {
-            alert('Pas assez de Heals pour remplir tous les groupes. Veuillez activer des spés secondaires pour les Heals ou réduire le nombre de DPS.');
-            return;
-        }
 
         const groups = [];
         for (let i = 0; i < numGroups; i++) {
@@ -345,61 +337,29 @@
             });
         }
 
-        // Affecter les Heals principaux
-        heals.forEach((heal, index) => {
+        // Répartition des Heals
+        let allHeals = heals.concat(secondaryHeals);
+        shuffle(allHeals);
+        allHeals.forEach((heal, index) => {
             const groupIndex = index % numGroups;
-            if (!groups[groupIndex].Heal) {
-                groups[groupIndex].Heal = heal;
-                groups[groupIndex].members.push(heal);
-                if (dpMode) {
-                    groups[groupIndex].totalDp += heal.dp;
-                }
+            groups[groupIndex].Heal = heal;
+            groups[groupIndex].members.push(heal);
+            if (dpMode) {
+                groups[groupIndex].totalDp += heal.dp;
             }
         });
 
-        // Affecter les Heals secondaires si nécessaire
-        if (heals.length < numGroups) {
-            secondaryHeals.forEach((heal) => {
-                for (let i = 0; i < numGroups; i++) {
-                    if (!groups[i].Heal) {
-                        groups[i].Heal = heal;
-                        groups[i].members.push(heal);
-                        if (dpMode) {
-                            groups[i].totalDp += heal.dp;
-                        }
-                        break;
-                    }
-                }
-            });
-        }
-
-        // Affecter les Tanks principaux
-        tanks.forEach((tank, index) => {
+        // Répartition des Tanks
+        let allTanks = tanks.concat(secondaryTanks);
+        shuffle(allTanks);
+        allTanks.forEach((tank, index) => {
             const groupIndex = index % numGroups;
-            if (!groups[groupIndex].Tank) {
-                groups[groupIndex].Tank = tank;
-                groups[groupIndex].members.push(tank);
-                if (dpMode) {
-                    groups[groupIndex].totalDp += tank.dp;
-                }
+            groups[groupIndex].Tank = tank;
+            groups[groupIndex].members.push(tank);
+            if (dpMode) {
+                groups[groupIndex].totalDp += tank.dp;
             }
         });
-
-        // Affecter les Tanks secondaires si nécessaire
-        if (tanks.length < numGroups) {
-            secondaryTanks.forEach((tank) => {
-                for (let i = 0; i < numGroups; i++) {
-                    if (!groups[i].Tank) {
-                        groups[i].Tank = tank;
-                        groups[i].members.push(tank);
-                        if (dpMode) {
-                            groups[i].totalDp += tank.dp;
-                        }
-                        break;
-                    }
-                }
-            });
-        }
 
         // Répartir les DPS
         let allDps = dps.concat(secondaryDps);
