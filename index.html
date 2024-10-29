@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Plouf Plouf - Répartition des Groupes</title>
     <style>
-        /* Styles CSS */
+        /* Vos styles CSS existants */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
@@ -127,6 +127,28 @@
         .no-player {
             color: red;
             font-style: italic;
+        }
+        /* Style pour l'affichage de l'aide */
+        #helpText {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        #helpText h2 {
+            text-align: center;
+            color: #007bff;
+        }
+        #helpText ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #helpText li {
+            margin-bottom: 10px;
+        }
+        #helpText strong {
+            color: #007bff;
         }
     </style>
 </head>
@@ -489,6 +511,8 @@
             if (command === 'cheat') {
                 forcedPlayers = args.slice(1).map(name => name.toLowerCase());
                 alert(`Les joueurs suivants seront placés dans le premier groupe : ${forcedPlayers.join(', ')}.`);
+            } else if (input === '??????????') {
+                displayHelp();
             } else if (command === 'dp') {
                 dpMode = true;
                 alert('Mode DP activé. Les groupes seront équilibrés en fonction des points DP.');
@@ -561,6 +585,26 @@
             }
             event.target.value = '';
         }
+    }
+
+    function displayHelp() {
+        const helpText = `
+        <div id="helpText">
+            <h2>Liste des Commandes Disponibles</h2>
+            <ul>
+                <li><strong>dp</strong> : Active le mode DP pour équilibrer les groupes en fonction des points DP.</li>
+                <li><strong>no dp</strong> : Désactive le mode DP.</li>
+                <li><strong>show dp</strong> : Affiche les points DP des joueurs.</li>
+                <li><strong>no show dp</strong> : Masque les points DP des joueurs.</li>
+                <li><strong>change dp NomDuJoueur NouvelleValeurDP</strong> : Modifie les DP d'un joueur spécifique.</li>
+                <li><strong>no change dp</strong> : Réinitialise les DP de tous les joueurs aux valeurs par défaut.</li>
+                <li><strong>add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]</strong> : Ajoute un nouveau joueur à la liste.</li>
+                <li><strong>cheat NomDuJoueur1 NomDuJoueur2 ...</strong> : Place les joueurs spécifiés dans le premier groupe.</li>
+            </ul>
+        </div>
+        `;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = helpText;
     }
 </script>
 
