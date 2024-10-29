@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Plouf Plouf - Répartition des Groupes</title>
     <style>
-        /* Styles inchangés */
+        /* Styles CSS */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
@@ -149,7 +149,7 @@
 <script>
     let dpMode = false;
     let showDp = false;
-    let cheatPlayers = [];
+    let forcedPlayers = [];
     const defaultDpValues = {};
 
     const players = [
@@ -172,12 +172,12 @@
         {name: 'Kiroy', mainRole: 'DPS', dp: 3}
     ];
 
-    // Sauvegarder les DP par défaut
     players.forEach(player => {
         defaultDpValues[player.name] = player.dp;
     });
 
     function generatePlayerList() {
+        const playerForm = document.getElementById('playerForm');
         playerForm.innerHTML = '';
         players.forEach((player, index) => {
             const div = document.createElement('div');
@@ -247,7 +247,6 @@
         });
     }
 
-    const playerForm = document.getElementById('playerForm');
     generatePlayerList();
 
     function shuffle(array) {
@@ -297,6 +296,33 @@
             groups.push({Tank: null, Heal: null, DPS: [], members: [], totalDp: 0});
         }
 
+        // Forcer les joueurs spécifiés dans le premier groupe
+        if (forcedPlayers.length > 0) {
+            const firstGroup = groups[0];
+            forcedPlayers.forEach(playerName => {
+                const playerIndex = selectedPlayers.findIndex(p => p.name.toLowerCase() === playerName.toLowerCase());
+                if (playerIndex !== -1) {
+                    const player = selectedPlayers.splice(playerIndex, 1)[0];
+                    if (player.useSecondary) {
+                        player.roleUsed = player.secondaryRole;
+                    } else {
+                        player.roleUsed = player.mainRole;
+                    }
+                    if (player.roleUsed === 'Tank' && !firstGroup.Tank) {
+                        firstGroup.Tank = player;
+                    } else if (player.roleUsed === 'Heal' && !firstGroup.Heal) {
+                        firstGroup.Heal = player;
+                    } else {
+                        firstGroup.DPS.push(player);
+                    }
+                    firstGroup.members.push(player);
+                    if (dpMode) {
+                        firstGroup.totalDp += player.dp;
+                    }
+                }
+            });
+        }
+
         // Affecter les Heals principaux
         heals.forEach((heal, index) => {
             const groupIndex = index % numGroups;
@@ -311,7 +337,7 @@
 
         // Affecter les Heals secondaires si nécessaire
         if (heals.length < numGroups) {
-            secondaryHeals.forEach((heal, index) => {
+            secondaryHeals.forEach((heal) => {
                 for (let i = 0; i < numGroups; i++) {
                     if (!groups[i].Heal) {
                         groups[i].Heal = heal;
@@ -339,7 +365,7 @@
 
         // Affecter les Tanks secondaires si nécessaire
         if (tanks.length < numGroups) {
-            secondaryTanks.forEach((tank, index) => {
+            secondaryTanks.forEach((tank) => {
                 for (let i = 0; i < numGroups; i++) {
                     if (!groups[i].Tank) {
                         groups[i].Tank = tank;
@@ -460,7 +486,22 @@
             const args = input.split(' ');
             const command = args[0].toLowerCase();
 
-            if (command === 'change' && args[1].toLowerCase() === 'dp') {
+            if (command === 'cheat') {
+                forcedPlayers = args.slice(1).map(name => name.toLowerCase());
+                alert(`Les joueurs suivants seront placés dans le premier groupe : ${forcedPlayers.join(', ')}.`);
+            } else if (command === 'dp') {
+                dpMode = true;
+                alert('Mode DP activé. Les groupes seront équilibrés en fonction des points DP.');
+            } else if (command === 'show' && args[1] && args[1].toLowerCase() === 'dp') {
+                showDp = true;
+                generatePlayerList();
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'dp') {
+                dpMode = false;
+                alert('Mode DP désactivé.');
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'show' && args[2] && args[2].toLowerCase() === 'dp') {
+                showDp = false;
+                generatePlayerList();
+            } else if (command === 'change' && args[1] && args[1].toLowerCase() === 'dp') {
                 if (args.length >= 4) {
                     const playerName = args[2];
                     const newDp = parseInt(args[3], 10);
@@ -481,7 +522,7 @@
                 } else {
                     alert('Usage : change dp NomDuJoueur NouvelleValeurDP');
                 }
-            } else if (command === 'no' && args[1].toLowerCase() === 'change' && args[2].toLowerCase() === 'dp') {
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'change' && args[2] && args[2].toLowerCase() === 'dp') {
                 players.forEach(player => {
                     player.dp = defaultDpValues[player.name];
                 });
@@ -489,21 +530,6 @@
                 if (showDp) {
                     generatePlayerList();
                 }
-            } else if (command === 'cheat') {
-                cheatPlayers = args.slice(1).map(name => name.toLowerCase());
-                alert(`Cheat activé pour les joueurs : ${cheatPlayers.join(', ')}.`);
-            } else if (command === 'dp') {
-                dpMode = true;
-                alert('Mode DP activé. Les groupes seront équilibrés en fonction des points DP.');
-            } else if (command === 'show' && args[1].toLowerCase() === 'dp') {
-                showDp = true;
-                generatePlayerList();
-            } else if (command === 'no' && args[1].toLowerCase() === 'dp') {
-                dpMode = false;
-                alert('Mode DP désactivé.');
-            } else if (command === 'no' && args[1].toLowerCase() === 'show' && args[2].toLowerCase() === 'dp') {
-                showDp = false;
-                generatePlayerList();
             } else if (command === 'add') {
                 if (args.length >= 3) {
                     const name = args[1];
