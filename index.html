@@ -613,7 +613,7 @@
     function getGifForPlayer(playerName) {
         const gifFileName = playerGifs[playerName];
         if (gifFileName) {
-            return 'gifs/' + gifFileName;
+            return gifFileName;
         } else {
             return ''; // Ou un GIF par défaut si désiré
         }
