@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -132,8 +133,8 @@
             background-color: #f2f2f2;
         }
         .group img {
-            width: 150px;
-            height: 150px;
+            width: 100px;
+            height: 100px;
             object-fit: cover;
         }
         .no-player {
@@ -212,7 +213,21 @@
     const players = [
         {name: 'Champka', mainRole: 'Heal', dp: 0, realName: 'Champka'},
         {name: 'Choràn', mainRole: 'DPS', dp: 0, realName: 'Choràn'},
-        // Liste des joueurs...
+        {name: 'Dégün', mainRole: 'DPS', dp: 0, realName: 'Dégün'},
+        {name: 'Eistre', mainRole: 'DPS', dp: 0, realName: 'Eistre'},
+        {name: 'Fëñrï', mainRole: 'DPS', dp: 0, realName: 'Fëñrïr'}, // Correction ici
+        {name: 'Filélïa', mainRole: 'DPS', dp: 0, realName: 'Filélïa'},
+        {name: 'Foyn', mainRole: 'DPS', dp: 0, realName: 'Foyn'},
+        {name: 'Houine', mainRole: 'Tank', dp: 0, realName: 'Houine'},
+        {name: 'Insta', mainRole: 'Heal', secondaryRole: 'DPS', dp: 0, realName: 'Péñombre'},
+        {name: 'Kiroy', mainRole: 'DPS', dp: 0, realName: 'Kirøy'},
+        {name: 'Krimonom', mainRole: 'DPS', secondaryRole: 'Tank', dp: 0, realName: 'Krimonom'},
+        {name: 'Kurôsaki', mainRole: 'DPS', dp: 0, realName: 'Kurôsaki'},
+        {name: 'Pasici', mainRole: 'DPS', secondaryRole: 'Heal', dp: 0, realName: 'Pasici'},
+        {name: 'Percy', mainRole: 'Heal', dp: 0, realName: 'Kathir'},
+        {name: 'Roukii', mainRole: 'DPS', dp: 0, realName: 'Roukii'},
+        {name: 'Sïndoreïs', mainRole: 'DPS', secondaryRole: 'Tank', dp: 0, realName: 'Sïndoreïs'},
+        {name: 'Tomakau', mainRole: 'DPS', dp: 0, realName: 'Tomakau'}
     ];
 
     players.forEach(player => {
@@ -223,7 +238,21 @@
     const playerGifs = {
         'Champka': 'Champka.gif',
         'Choràn': 'Choren.gif',
-        // Autres GIFs...
+        'Dégün': 'Degun.gif',
+        'Eistre': 'Eistre.gif',
+        'Fëñrï': 'Fenrir.gif',
+        'Filélïa': 'Filé.gif',
+        'Foyn': 'Foyn.gif',
+        'Houine': 'Houine.gif',
+        'Insta': 'Insta.gif',
+        'Kiroy': 'Kiroy.gif',
+        'Krimonom': 'Krimonon.gif',
+        'Kurôsaki': 'Kuro.gif',
+        'Pasici': 'Pasici.gif',
+        'Percy': 'Percy.gif',
+        'Roukii': 'Roukii.gif',
+        'Sïndoreïs': 'Sindo.gif',
+        'Tomakau': 'Toto.gif'
     };
 
     async function updateDpWithRioScores() {
@@ -236,9 +265,11 @@
                     player.dp = Math.round(rioScore);
                     defaultDpValues[player.name] = player.dp;
                 } else {
+                    console.error(`Erreur lors de la récupération du score RIO pour ${player.realName}`);
                     player.dp = 0; // Valeur par défaut si l'API ne renvoie pas de résultat
                 }
-            } catch {
+            } catch (error) {
+                console.error(`Erreur réseau pour ${player.realName}:`, error);
                 player.dp = 0; // Valeur par défaut en cas d'erreur réseau
             }
         });
@@ -342,9 +373,19 @@
         });
     }
 
+    // Appelez cette fonction lorsque la page se charge
     updateDpWithRioScores();
 
+    function shuffle(array) {
+        array.sort(() => Math.random() - 0.5);
+    }
+
     function generateGroups() {
+        if (dpMode && forcedPlayers.length > 0) {
+            alert("Le mode DP est incompatible avec la fonctionnalité 'cheat'. Veuillez désactiver le mode DP ou ne pas utiliser 'cheat'.");
+            return;
+        }
+
         const selectedPlayers = [];
         const playerCheckboxes = document.querySelectorAll('input.select-player:checked');
         playerCheckboxes.forEach((checkbox) => {
@@ -362,8 +403,35 @@
             return;
         }
 
+        // Séparer les joueurs forcés
+        const forcedPlayerNames = forcedPlayers.map(name => name.toLowerCase());
+        const forcedPlayersList = [];
+        const remainingPlayers = [];
+
+        selectedPlayers.forEach(player => {
+            if (forcedPlayerNames.includes(player.name.toLowerCase())) {
+                forcedPlayersList.push(player);
+            } else {
+                remainingPlayers.push(player);
+            }
+        });
+
+        // Compter les rôles
+        const numTanks = selectedPlayers.filter(p => p.roleUsed === 'Tank').length;
+        const numHeals = selectedPlayers.filter(p => p.roleUsed === 'Heal').length;
+        const numDps = selectedPlayers.filter(p => p.roleUsed === 'DPS').length;
+
+        // Calculer le nombre de groupes nécessaires
+        const maxDpsPerGroup = 3;
+        const numGroups = Math.max(
+            Math.ceil(numDps / maxDpsPerGroup),
+            numTanks,
+            numHeals
+        );
+
+        // Initialiser les groupes
         const groups = [];
-        for (let i = 0; i < Math.max(1, Math.ceil(selectedPlayers.length / 3)); i++) {
+        for (let i = 0; i < numGroups; i++) {
             groups.push({
                 Tank: null,
                 Heal: null,
@@ -373,13 +441,70 @@
             });
         }
 
-        selectedPlayers.forEach(player => {
-            const group = groups.find(g => !g[player.roleUsed]) || groups[0];
-            group[player.roleUsed] = player;
+        // Placer les joueurs forcés dans le premier groupe
+        forcedPlayersList.forEach(player => {
+            const group = groups[0];
+            if (player.roleUsed === 'Tank' && !group.Tank) {
+                group.Tank = player;
+            } else if (player.roleUsed === 'Heal' && !group.Heal) {
+                group.Heal = player;
+            } else {
+                group.DPS.push(player);
+            }
             group.members.push(player);
             group.totalDp += player.dp;
         });
 
+        // Retirer les joueurs forcés de la liste des joueurs restants
+        remainingPlayers.forEach((player, index) => {
+            if (forcedPlayerNames.includes(player.name.toLowerCase())) {
+                remainingPlayers.splice(index, 1);
+            }
+        });
+
+        if (dpMode) {
+            // Trier les joueurs restants par score RIO décroissant
+            remainingPlayers.sort((a, b) => b.dp - a.dp);
+        } else {
+            shuffle(remainingPlayers);
+        }
+
+        // Répartir les joueurs restants
+        remainingPlayers.forEach(player => {
+            // Trouver les groupes possibles pour ce joueur en fonction de son rôle
+            let possibleGroups = groups.filter(group => {
+                if (player.roleUsed === 'Tank') {
+                    return !group.Tank;
+                } else if (player.roleUsed === 'Heal') {
+                    return !group.Heal;
+                } else if (player.roleUsed === 'DPS') {
+                    return group.DPS.length < maxDpsPerGroup;
+                }
+                return false;
+            });
+
+            if (possibleGroups.length === 0) {
+                // Si aucun groupe ne peut accueillir ce joueur, on l'ajoute au groupe avec le score total le plus bas, même si cela dépasse les limites de rôle
+                possibleGroups = groups;
+            }
+
+            // Trouver le groupe avec le score total le plus bas parmi les groupes possibles
+            possibleGroups.sort((a, b) => a.totalDp - b.totalDp);
+            const group = possibleGroups[0];
+
+            // Ajouter le joueur au groupe
+            if (player.roleUsed === 'Tank' && !group.Tank) {
+                group.Tank = player;
+            } else if (player.roleUsed === 'Heal' && !group.Heal) {
+                group.Heal = player;
+            } else {
+                group.DPS.push(player);
+            }
+            group.members.push(player);
+            group.totalDp += player.dp;
+        });
+
+        // Afficher les groupes
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '';
         groups.forEach((group, index) => {
@@ -412,8 +537,8 @@
                     const gifImg = document.createElement('img');
                     gifImg.src = getGifForPlayer(group.Tank.name);
                     gifImg.alt = group.Tank.name;
-                    gifImg.style.width = '150px';
-                    gifImg.style.height = '150px';
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
                     gifImg.style.objectFit = 'cover';
                     cellName.appendChild(gifImg);
                 } else {
@@ -433,8 +558,8 @@
                     const gifImg = document.createElement('img');
                     gifImg.src = getGifForPlayer(group.Heal.name);
                     gifImg.alt = group.Heal.name;
-                    gifImg.style.width = '150px';
-                    gifImg.style.height = '150px';
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
                     gifImg.style.objectFit = 'cover';
                     cellName.appendChild(gifImg);
                 } else {
@@ -454,8 +579,8 @@
                     const gifImg = document.createElement('img');
                     gifImg.src = getGifForPlayer(player.name);
                     gifImg.alt = player.name;
-                    gifImg.style.width = '150px';
-                    gifImg.style.height = '150px';
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
                     gifImg.style.objectFit = 'cover';
                     cellName.appendChild(gifImg);
                 } else {
@@ -471,12 +596,150 @@
             table.appendChild(tbody);
             groupDiv.appendChild(table);
 
+            // Affichage du total des scores RIO du groupe
+            if (dpMode) {
+                const totalDpDiv = document.createElement('div');
+                totalDpDiv.style.marginTop = '10px';
+                totalDpDiv.innerHTML = `<strong>Total des scores RIO du groupe :</strong> ${group.totalDp}`;
+                groupDiv.appendChild(totalDpDiv);
+            }
+
             resultDiv.appendChild(groupDiv);
         });
+
+        // Réinitialiser la liste des joueurs forcés après la génération des groupes
+        forcedPlayers = [];
     }
 
     function getGifForPlayer(playerName) {
-        return playerGifs[playerName] || '';
+        const gifFileName = playerGifs[playerName];
+        if (gifFileName) {
+            return gifFileName;
+        } else {
+            return ''; // Ou un GIF par défaut si désiré
+        }
+    }
+
+    function toggleCommandTerminal() {
+        const terminal = document.getElementById('commandTerminal');
+        terminal.style.display = terminal.style.display === 'none' ? 'block' : 'none';
+        if (terminal.style.display === 'block') {
+            document.getElementById('commandInput').focus();
+        }
+    }
+
+    function handleCommand(event) {
+        if (event.key === 'Enter') {
+            const input = event.target.value.trim();
+            const args = input.split(' ');
+            const command = args[0].toLowerCase();
+
+            if (command === 'cheat') {
+                forcedPlayers = args.slice(1).map(name => name.toLowerCase());
+                alert(`Les joueurs suivants seront placés dans le premier groupe lors du prochain tirage : ${forcedPlayers.join(', ')}.`);
+            } else if (input === '??????????') {
+                displayHelp();
+            } else if (command === 'dp') {
+                dpMode = true;
+                alert('Mode DP activé. Les groupes seront équilibrés en fonction des scores RIO.');
+            } else if (command === 'show' && args[1] && args[1].toLowerCase() === 'dp') {
+                showDp = true;
+                generatePlayerList();
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'dp') {
+                dpMode = false;
+                alert('Mode DP désactivé.');
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'show' && args[2] && args[2].toLowerCase() === 'dp') {
+                showDp = false;
+                generatePlayerList();
+            } else if (command === 'change' && args[1] && args[1].toLowerCase() === 'dp') {
+                if (args.length >= 4) {
+                    const playerName = args[2];
+                    const newDp = parseInt(args[3], 10);
+                    if (!isNaN(newDp)) {
+                        const player = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+                        if (player) {
+                            player.dp = newDp;
+                            alert(`Score RIO de ${player.name} mis à jour à ${newDp}.`);
+                            if (showDp) {
+                                generatePlayerList();
+                            }
+                        } else {
+                            alert(`Joueur ${playerName} non trouvé.`);
+                        }
+                    } else {
+                        alert('Veuillez spécifier une valeur numérique pour le score RIO.');
+                    }
+                } else {
+                    alert('Usage : change dp NomDuJoueur NouvelleValeur');
+                }
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'change' && args[2] && args[2].toLowerCase() === 'dp') {
+                players.forEach(player => {
+                    player.dp = defaultDpValues[player.name];
+                });
+                alert('Les scores RIO ont été réinitialisés aux valeurs par défaut.');
+                if (showDp) {
+                    generatePlayerList();
+                }
+            } else if (command === 'add') {
+                if (args.length >= 3) {
+                    const name = args[1];
+                    const mainRole = args[2].toUpperCase();
+                    let secondaryRole = null;
+                    let dp = 0;
+
+                    if (['DPS', 'HEAL', 'TANK'].includes(mainRole)) {
+                        if (args.length >= 4 && ['DPS', 'HEAL', 'TANK'].includes(args[3].toUpperCase())) {
+                            secondaryRole = args[3].toUpperCase();
+                            if (args.length >= 5 && !isNaN(parseInt(args[4], 10))) {
+                                dp = parseInt(args[4], 10);
+                            }
+                        } else if (args.length >= 4 && !isNaN(parseInt(args[3], 10))) {
+                            dp = parseInt(args[3], 10);
+                        }
+                        players.push({name, mainRole, secondaryRole, dp, realName: name});
+                        defaultDpValues[name] = dp;
+                        alert(`Joueur ${name} ajouté avec le rôle ${mainRole}${secondaryRole ? ' et le rôle secondaire ' + secondaryRole : ''}${dp ? ' et ' + dp + ' DP' : ''}.`);
+                        generatePlayerList();
+                    } else {
+                        alert('Rôle principal invalide. Utilisez DPS, HEAL ou TANK.');
+                    }
+                } else {
+                    alert('Usage : add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]');
+                }
+            } else if (command === 'gifs') {
+                showGifs = true;
+                alert('Mode GIF activé. Les résultats afficheront des GIFs.');
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'gifs') {
+                showGifs = false;
+                alert('Mode GIF désactivé. Les résultats afficheront les noms des joueurs.');
+            } else {
+                alert('Commande non reconnue.');
+            }
+            event.target.value = '';
+            toggleCommandTerminal(); // Fermer le terminal après exécution de la commande
+        }
+    }
+
+    function displayHelp() {
+        const helpText = `
+        <div id="helpText">
+            <h2>Liste des Commandes Disponibles</h2>
+            <ul>
+                <li><strong>dp</strong> : Active le mode DP pour équilibrer les groupes en fonction des scores RIO.</li>
+                <li><strong>no dp</strong> : Désactive le mode DP.</li>
+                <li><strong>show dp</strong> : Affiche les scores RIO des joueurs.</li>
+                <li><strong>no show dp</strong> : Masque les scores RIO des joueurs.</li>
+                <li><strong>change dp NomDuJoueur NouvelleValeur</strong> : Modifie le score RIO d'un joueur spécifique.</li>
+                <li><strong>no change dp</strong> : Réinitialise les scores RIO de tous les joueurs aux valeurs par défaut.</li>
+                <li><strong>add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]</strong> : Ajoute un nouveau joueur à la liste.</li>
+                <li><strong>cheat NomDuJoueur1 NomDuJoueur2 ...</strong> : Place les joueurs spécifiés dans le premier groupe lors du prochain tirage.</li>
+                <li><strong>gifs</strong> : Active l'affichage des GIFs dans les résultats.</li>
+                <li><strong>no gifs</strong> : Désactive l'affichage des GIFs dans les résultats.</li>
+            </ul>
+        </div>
+        `;
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = helpText;
     }
 </script>
 
