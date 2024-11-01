@@ -131,6 +131,11 @@
         .group tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+        .group img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+        }
         .no-player {
             color: red;
             font-style: italic;
@@ -200,6 +205,7 @@
 <script>
     let dpMode = false;
     let showDp = false;
+    let showGifs = false;
     let forcedPlayers = [];
     const defaultDpValues = {};
 
@@ -208,7 +214,7 @@
         {name: 'Choràn', mainRole: 'DPS', dp: 0, realName: 'Choràn'},
         {name: 'Dégün', mainRole: 'DPS', dp: 0, realName: 'Dégün'},
         {name: 'Eistre', mainRole: 'DPS', dp: 0, realName: 'Eistre'},
-        {name: 'Fëñrï', mainRole: 'DPS', dp: 0, realName: 'Fëñrïr'}, // Correction apportée ici
+        {name: 'Fëñrï', mainRole: 'DPS', dp: 0, realName: 'Fëñrïr'}, // Correction ici
         {name: 'Filélïa', mainRole: 'DPS', dp: 0, realName: 'Filélïa'},
         {name: 'Foyn', mainRole: 'DPS', dp: 0, realName: 'Foyn'},
         {name: 'Houine', mainRole: 'Tank', dp: 0, realName: 'Houine'},
@@ -226,6 +232,27 @@
     players.forEach(player => {
         defaultDpValues[player.name] = player.dp;
     });
+
+    // Mapping des joueurs aux noms de leurs GIFs
+    const playerGifs = {
+        'Champka': 'Champka.gif',
+        'Choràn': 'Choren.gif',
+        'Dégün': 'Degun.gif',
+        'Eistre': 'Eistre.gif',
+        'Fëñrï': 'Fenrir.gif',
+        'Filélïa': 'Filé.gif',
+        'Foyn': 'Foyn.gif',
+        'Houine': 'Houine.gif',
+        'Insta': 'Insta.gif',
+        'Kiroy': 'Kiroy.gif',
+        'Krimonom': 'Krimonon.gif',
+        'Kurôsaki': 'Kuro.gif',
+        'Pasici': 'Pasici.gif',
+        'Percy': 'Percy.gif',
+        'Roukii': 'Roukii.gif',
+        'Sïndoreïs': 'Sindo.gif',
+        'Tomakau': 'Toto.gif'
+    };
 
     async function updateDpWithRioScores() {
         const promises = players.map(async (player) => {
@@ -505,7 +532,17 @@
             if (group.Tank) {
                 const row = document.createElement('tr');
                 const cellName = document.createElement('td');
-                cellName.textContent = group.Tank.name;
+                if (showGifs) {
+                    const gifImg = document.createElement('img');
+                    gifImg.src = getGifForPlayer(group.Tank.name);
+                    gifImg.alt = group.Tank.name;
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
+                    gifImg.style.objectFit = 'cover';
+                    cellName.appendChild(gifImg);
+                } else {
+                    cellName.textContent = group.Tank.name;
+                }
                 const cellRole = document.createElement('td');
                 cellRole.textContent = 'Tank';
                 row.appendChild(cellName);
@@ -516,7 +553,17 @@
             if (group.Heal) {
                 const row = document.createElement('tr');
                 const cellName = document.createElement('td');
-                cellName.textContent = group.Heal.name;
+                if (showGifs) {
+                    const gifImg = document.createElement('img');
+                    gifImg.src = getGifForPlayer(group.Heal.name);
+                    gifImg.alt = group.Heal.name;
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
+                    gifImg.style.objectFit = 'cover';
+                    cellName.appendChild(gifImg);
+                } else {
+                    cellName.textContent = group.Heal.name;
+                }
                 const cellRole = document.createElement('td');
                 cellRole.textContent = 'Heal';
                 row.appendChild(cellName);
@@ -527,7 +574,17 @@
             group.DPS.forEach(player => {
                 const row = document.createElement('tr');
                 const cellName = document.createElement('td');
-                cellName.textContent = player.name;
+                if (showGifs) {
+                    const gifImg = document.createElement('img');
+                    gifImg.src = getGifForPlayer(player.name);
+                    gifImg.alt = player.name;
+                    gifImg.style.width = '100px';
+                    gifImg.style.height = '100px';
+                    gifImg.style.objectFit = 'cover';
+                    cellName.appendChild(gifImg);
+                } else {
+                    cellName.textContent = player.name;
+                }
                 const cellRole = document.createElement('td');
                 cellRole.textContent = 'DPS';
                 row.appendChild(cellName);
@@ -551,6 +608,15 @@
 
         // Réinitialiser la liste des joueurs forcés après la génération des groupes
         forcedPlayers = [];
+    }
+
+    function getGifForPlayer(playerName) {
+        const gifFileName = playerGifs[playerName];
+        if (gifFileName) {
+            return 'gifs/' + gifFileName;
+        } else {
+            return ''; // Ou un GIF par défaut si désiré
+        }
     }
 
     function toggleCommandTerminal() {
@@ -639,6 +705,12 @@
                 } else {
                     alert('Usage : add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]');
                 }
+            } else if (command === 'gifs') {
+                showGifs = true;
+                alert('Mode GIF activé. Les résultats afficheront des GIFs.');
+            } else if (command === 'no' && args[1] && args[1].toLowerCase() === 'gifs') {
+                showGifs = false;
+                alert('Mode GIF désactivé. Les résultats afficheront les noms des joueurs.');
             } else {
                 alert('Commande non reconnue.');
             }
@@ -660,6 +732,8 @@
                 <li><strong>no change dp</strong> : Réinitialise les scores RIO de tous les joueurs aux valeurs par défaut.</li>
                 <li><strong>add NomDuJoueur RôlePrincipal [RôleSecondaire] [DP]</strong> : Ajoute un nouveau joueur à la liste.</li>
                 <li><strong>cheat NomDuJoueur1 NomDuJoueur2 ...</strong> : Place les joueurs spécifiés dans le premier groupe lors du prochain tirage.</li>
+                <li><strong>gifs</strong> : Active l'affichage des GIFs dans les résultats.</li>
+                <li><strong>no gifs</strong> : Désactive l'affichage des GIFs dans les résultats.</li>
             </ul>
         </div>
         `;
