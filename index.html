@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>NITROPLOUF</title>
-    <!-- Importation de la police Roboto depuis Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-
     <style>
-        /* Définition des variables CSS pour une personnalisation facile */
         :root {
             --primary-color: #007bff;
             --primary-color-dark: #0056b3;
@@ -20,47 +17,78 @@
             --border-radius: 8px;
             --font-family: 'Roboto', sans-serif;
         }
-
-        /* Styles généraux */
+        body.dark-mode {
+            --background-color: #1e1e1e;
+            --text-color: #f0f2f5;
+            --border-color: #444;
+            --primary-color: #0d6efd;
+            --primary-color-dark: #0a58ca;
+        }
+        body.girl-mode {
+            --background-color: #ffc0cb;
+            --text-color: #800080;
+        }
         body {
             font-family: var(--font-family);
             background-color: var(--background-color);
+            color: var(--text-color);
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
         }
         h1 {
             text-align: center;
-            color: var(--text-color);
             font-size: 2.5em;
             font-weight: bold;
             margin-bottom: 30px;
         }
-        /* Styles pour les options */
         .options-container {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 20px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .options-container label {
             font-size: 16px;
-            color: var(--text-color);
             cursor: pointer;
         }
         .options-container input[type="checkbox"] {
             margin-right: 5px;
         }
-        /* Styles pour le formulaire d'ajout de joueur */
+        .mode-buttons {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #toggleDarkMode, #toggleGirlMode {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            font-size: 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 120px;
+            text-align: left;
+        }
+        #toggleDarkMode:hover, #toggleGirlMode:hover {
+            background-color: var(--primary-color-dark);
+        }
         #addPlayerForm {
             display: none;
             margin: 0 auto 20px auto;
             max-width: 400px;
-            background-color: #fff;
+            background-color: var(--background-color);
             padding: 20px;
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
         #addPlayerForm h3 {
             margin-top: 0;
@@ -77,6 +105,9 @@
             border-radius: var(--border-radius);
             box-sizing: border-box;
             outline: none;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
         #addPlayerForm button {
             display: block;
@@ -88,11 +119,11 @@
             border-radius: var(--border-radius);
             cursor: pointer;
             font-size: 16px;
+            transition: background-color 0.3s;
         }
         #addPlayerForm button:hover {
             background-color: var(--primary-color-dark);
         }
-        /* Styles pour la barre de recherche */
         .search-container {
             position: relative;
             width: 100%;
@@ -107,6 +138,9 @@
             border-radius: var(--border-radius);
             box-sizing: border-box;
             outline: none;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
         #playerSearch:focus, #miguelPlayerSearch:focus {
             border-color: var(--primary-color);
@@ -117,7 +151,7 @@
             top: 100%;
             left: 0;
             width: 100%;
-            background-color: #fff;
+            background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-top: none;
             max-height: 300px;
@@ -125,15 +159,20 @@
             z-index: 1000;
             border-radius: 0 0 var(--border-radius) var(--border-radius);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
         .suggestion-item {
             display: flex;
             align-items: center;
             padding: 8px;
             cursor: pointer;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
         .suggestion-item:hover {
-            background-color: #f0f0f0;
+            background-color: var(--primary-color-dark);
+            color: #fff;
         }
         .suggestion-item img {
             width: 40px;
@@ -144,9 +183,7 @@
         }
         .suggestion-item span {
             font-size: 16px;
-            color: var(--text-color);
         }
-        /* Styles pour les joueurs sélectionnés */
         .selected-players {
             display: flex;
             flex-wrap: wrap;
@@ -154,7 +191,7 @@
             margin-bottom: 20px;
         }
         .selected-player {
-            background-color: #fff;
+            background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             padding: 10px;
@@ -162,7 +199,12 @@
             width: 180px;
             text-align: center;
             position: relative;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+        }
+        .selected-player:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
         }
         .selected-player img {
             width: 100px;
@@ -183,7 +225,6 @@
         .selected-player div {
             margin-bottom: 5px;
         }
-        /* Styles pour les boutons */
         .btn {
             display: block;
             margin: 20px auto;
@@ -201,7 +242,6 @@
         .btn:hover {
             background-color: var(--primary-color-dark);
         }
-        /* Styles pour le mode Miguel */
         #miguelContainer {
             display: none;
             margin: 0 auto 20px auto;
@@ -217,17 +257,17 @@
         .miguel-player {
             margin: 5px;
         }
-        /* Styles pour le résultat */
         #result {
             margin-top: 30px;
         }
         .group {
-            background-color: #fff;
+            background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
         .group h3 {
             margin-top: 0;
@@ -241,22 +281,22 @@
         .group th, .group td {
             padding: 10px;
             text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
         .group th {
-            background-color: #f8f9fa;
-            border-bottom: 2px solid var(--border-color);
+            background-color: var(--background-color);
         }
         .group tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: var(--background-color);
         }
-        /* Styles pour la section des prochaines fonctionnalités */
         #upcomingFeatures {
             margin-top: 40px;
             padding: 20px;
-            background-color: #fff;
+            background-color: var(--background-color);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
         #upcomingFeatures h2 {
             margin-top: 0;
@@ -267,7 +307,6 @@
             list-style-type: disc;
             padding-left: 20px;
         }
-        /* Style pour le lien de téléchargement */
         #downloadLink {
             position: fixed;
             bottom: 10px;
@@ -279,16 +318,19 @@
         #downloadLink:hover {
             color: var(--primary-color-dark);
         }
-        /* Style pour le message de contact */
         #contactMessage {
             margin-top: 20px;
             text-align: center;
             font-size: 16px;
-            color: var(--text-color);
         }
     </style>
 </head>
 <body>
+
+<div class="mode-buttons">
+    <button id="toggleDarkMode" onclick="toggleDarkMode()">Mode Sombre</button>
+    <button id="toggleGirlMode" onclick="toggleGirlMode()">Mode Fille</button>
+</div>
 
 <h1>NITROPLOUF</h1>
 
@@ -354,8 +396,9 @@
     let showDp = false;
     let miguelMode = false;
     let miguelPlayers = [];
+    let darkMode = false;
+    let girlMode = false;
 
-    // Mapping des classes aux couleurs
     const classColors = {
         "Death Knight": "#C41F3B",
         "Demon Hunter": "#A330C9",
@@ -364,13 +407,13 @@
         "Mage": "#69CCF0",
         "Monk": "#00FF96",
         "Paladin": "#F58CBA",
-        "Priest": "#FFFFFF",
+        "Priest": "#AAAAAA",
         "Rogue": "#FFF569",
         "Shaman": "#0070DE",
         "Warlock": "#9482C9",
         "Warrior": "#C79C6E",
         "Evoker": "#33937F",
-        "Unknown": "#FFFFFF"
+        "Unknown": "#000000"
     };
 
     async function fetchGuildMembers() {
@@ -382,14 +425,13 @@
                 const data = await response.json();
                 const members = data.members.map(member => member.character);
 
-                // Pour chaque membre, récupérer les données détaillées
                 const detailedMembers = await Promise.all(members.map(async (character) => {
                     try {
                         const characterResponse = await fetch(`https://raider.io/api/v1/characters/profile?region=eu&realm=${encodeURIComponent(character.realm)}&name=${encodeURIComponent(character.name)}&fields=mythic_plus_scores_by_season:current,thumbnail_url,class,active_spec_role`);
                         if (characterResponse.ok) {
                             const characterData = await characterResponse.json();
                             const dpScore = characterData.mythic_plus_scores_by_season && characterData.mythic_plus_scores_by_season[0] && characterData.mythic_plus_scores_by_season[0].scores ? characterData.mythic_plus_scores_by_season[0].scores.all || 0 : 0;
-                            const classColor = classColors[characterData.class] || "#FFFFFF";
+                            const classColor = classColors[characterData.class] || "#000000";
 
                             return {
                                 name: characterData.name,
@@ -401,37 +443,30 @@
                                 thumbnail_url: characterData.thumbnail_url || 'https://via.placeholder.com/100'
                             };
                         } else {
-                            console.error(`Erreur lors de la récupération des données du personnage ${character.name}`);
                             return null;
                         }
                     } catch (error) {
-                        console.error(`Erreur réseau lors de la récupération des données du personnage ${character.name}:`, error);
                         return null;
                     }
                 }));
 
-                // Filtrer les entrées null (en cas d'erreurs)
                 const validMembers = detailedMembers.filter(member => member !== null);
 
                 return validMembers;
             } else {
-                console.error('Erreur lors de la récupération des membres de la guilde');
                 return [];
             }
         } catch (error) {
-            console.error('Erreur réseau lors de la récupération des membres de la guilde:', error);
             return [];
         }
     }
 
     async function initialize() {
         guildMembers = await fetchGuildMembers();
-        // Normaliser les rôles en minuscules
         guildMembers.forEach(member => {
             member.role = (member.role || 'unknown').toLowerCase();
         });
 
-        // Ajouter un écouteur pour la combinaison Maj + = pour le mode Miguel
         document.addEventListener('keydown', (event) => {
             if (event.key === '=' && event.shiftKey && !event.target.matches('input, textarea')) {
                 toggleMiguelMode();
@@ -500,7 +535,7 @@
 
             const nameSpan = document.createElement('div');
             nameSpan.textContent = player.name;
-            nameSpan.style.color = player.classColor;
+            nameSpan.style.color = player.classColor || '#000000';
             nameSpan.style.fontWeight = 'bold';
             div.appendChild(nameSpan);
 
@@ -531,15 +566,12 @@
 
         const equilibrate = document.getElementById('equilibrateCheckbox').checked;
 
-        // Récupérer les joueurs sélectionnés avec leurs informations complètes
         const players = selectedPlayers.map(playerName => guildMembers.find(member => member.name === playerName));
 
-        // Compter les rôles
         const tanks = players.filter(p => p.role === 'tank');
         const healers = players.filter(p => p.role === 'healer');
         const dps = players.filter(p => p.role === 'dps');
 
-        // Calculer le nombre de groupes nécessaires
         const maxGroupSize = 5;
         const maxDpsPerGroup = 3;
 
@@ -550,7 +582,6 @@
             Math.ceil(dps.length / maxDpsPerGroup)
         );
 
-        // Initialiser les groupes
         const groups = [];
         for (let i = 0; i < numGroups; i++) {
             groups.push({
@@ -562,22 +593,17 @@
             });
         }
 
-        // Trier les joueurs en fonction du mode Équilibre
         if (equilibrate) {
-            // Trier les joueurs par score RIO décroissant
             players.sort((a, b) => b.dp - a.dp);
         } else {
-            // Mélanger les joueurs aléatoirement
             players.sort(() => Math.random() - 0.5);
         }
 
-        // Si le mode Miguel est activé, placer les joueurs dans le premier groupe
         if (miguelPlayers.length > 0) {
             const group = groups[0];
             miguelPlayers.forEach(playerName => {
                 const player = players.find(p => p.name === playerName);
                 if (player) {
-                    // Ajouter le joueur au groupe
                     if (player.role === 'tank' && !group.Tank) {
                         group.Tank = player;
                     } else if (player.role === 'healer' && !group.Healer) {
@@ -587,20 +613,15 @@
                     }
                     group.members.push(player);
                     group.totalDp += player.dp;
-                    // Retirer le joueur de la liste des joueurs à répartir
                     players.splice(players.indexOf(player), 1);
                 }
             });
-            miguelPlayers = []; // Réinitialiser le mode miguel
+            miguelPlayers = [];
             miguelMode = false;
             document.getElementById('miguelContainer').style.display = 'none';
         }
 
-        // Répartir les joueurs restants
         players.forEach(player => {
-            let assigned = false;
-
-            // Trouver les groupes possibles pour ce joueur en fonction de son rôle
             let possibleGroups = groups.filter(group => {
                 if (player.role === 'tank') {
                     return !group.Tank && group.members.length < maxGroupSize;
@@ -613,22 +634,18 @@
             });
 
             if (possibleGroups.length === 0) {
-                // Si aucun groupe ne peut accueillir ce joueur, on l'ajoute au groupe avec le moins de membres
                 groups.sort((a, b) => a.members.length - b.members.length);
                 possibleGroups = [groups[0]];
             }
 
-            // Si le mode Équilibre est activé, choisir le groupe avec le score total le plus bas
             if (equilibrate) {
                 possibleGroups.sort((a, b) => a.totalDp - b.totalDp);
             } else {
-                // Sinon, choisir un groupe aléatoirement parmi les groupes possibles
                 possibleGroups.sort(() => Math.random() - 0.5);
             }
 
             const group = possibleGroups[0];
 
-            // Ajouter le joueur au groupe
             if (player.role === 'tank' && !group.Tank) {
                 group.Tank = player;
             } else if (player.role === 'healer' && !group.Healer) {
@@ -640,7 +657,6 @@
             group.totalDp += player.dp;
         });
 
-        // Afficher les groupes
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = '';
 
@@ -711,7 +727,6 @@
             table.appendChild(tbody);
             groupDiv.appendChild(table);
 
-            // Affichage du total des scores RIO du groupe si le mode Équilibre est activé
             if (equilibrate) {
                 const totalDpDiv = document.createElement('div');
                 totalDpDiv.style.marginTop = '10px';
@@ -743,13 +758,11 @@
             return;
         }
 
-        // Vérifier si le joueur existe déjà
         if (guildMembers.some(member => member.name === name)) {
             alert('Un joueur avec ce nom existe déjà.');
             return;
         }
 
-        // Ajouter le joueur à la liste des membres
         const newPlayer = {
             name: name,
             realName: name,
@@ -763,11 +776,9 @@
 
         alert(`Joueur ${name} ajouté avec succès.`);
 
-        // Ajouter le joueur à la sélection
         selectedPlayers.push(name);
         displaySelectedPlayers();
 
-        // Réinitialiser le formulaire
         document.getElementById('newPlayerName').value = '';
         document.getElementById('newPlayerRole').value = '';
         document.getElementById('newPlayerRio').value = '';
@@ -857,17 +868,44 @@
             return;
         }
 
-        // Ajouter les joueurs miguel à la sélection principale s'ils ne le sont pas déjà
         miguelPlayers.forEach(playerName => {
             if (!selectedPlayers.includes(playerName)) {
                 selectedPlayers.push(playerName);
             }
         });
         displaySelectedPlayers();
-        // Les joueurs seront placés ensemble au prochain tirage
     }
 
-    // Initialiser l'application
+    function toggleDarkMode() {
+        darkMode = !darkMode;
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('girl-mode');
+            girlMode = false;
+            const toggleGirlButton = document.getElementById('toggleGirlMode');
+            toggleGirlButton.textContent = 'Mode Fille';
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+        const toggleButton = document.getElementById('toggleDarkMode');
+        toggleButton.textContent = darkMode ? 'Mode Clair' : 'Mode Sombre';
+    }
+
+    function toggleGirlMode() {
+        girlMode = !girlMode;
+        if (girlMode) {
+            document.body.classList.add('girl-mode');
+            document.body.classList.remove('dark-mode');
+            darkMode = false;
+            const toggleDarkButton = document.getElementById('toggleDarkMode');
+            toggleDarkButton.textContent = 'Mode Sombre';
+        } else {
+            document.body.classList.remove('girl-mode');
+        }
+        const toggleButton = document.getElementById('toggleGirlMode');
+        toggleButton.textContent = girlMode ? 'Mode Normal' : 'Mode Fille';
+    }
+
     initialize();
 </script>
 
