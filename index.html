@@ -99,7 +99,7 @@
             max-width: 400px;
             margin: 0 auto 20px auto;
         }
-        #playerSearch, #cheatPlayerSearch {
+        #playerSearch, #miguelPlayerSearch {
             width: 100%;
             padding: 12px;
             font-size: 16px;
@@ -108,11 +108,11 @@
             box-sizing: border-box;
             outline: none;
         }
-        #playerSearch:focus, #cheatPlayerSearch:focus {
+        #playerSearch:focus, #miguelPlayerSearch:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 5px rgba(0,123,255,0.5);
         }
-        #suggestions, #cheatSuggestions {
+        #suggestions, #miguelSuggestions {
             position: absolute;
             top: 100%;
             left: 0;
@@ -201,20 +201,20 @@
         .btn:hover {
             background-color: var(--primary-color-dark);
         }
-        /* Styles pour le mode Cheat */
-        #cheatContainer {
+        /* Styles pour le mode Miguel */
+        #miguelContainer {
             display: none;
             margin: 0 auto 20px auto;
             max-width: 400px;
             text-align: center;
         }
-        #cheatSelectedPlayers {
+        #miguelSelectedPlayers {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
             margin-top: 10px;
         }
-        .cheat-player {
+        .miguel-player {
             margin: 5px;
         }
         /* Styles pour le résultat */
@@ -308,12 +308,6 @@
         <option value="dps">DPS</option>
     </select>
     <input type="number" id="newPlayerRio" placeholder="Score RIO (optionnel)">
-    <select id="newPlayerSecondaryRole">
-        <option value="" disabled selected>Rôle secondaire (optionnel)</option>
-        <option value="tank">TANK</option>
-        <option value="healer">HEAL</option>
-        <option value="dps">DPS</option>
-    </select>
     <button onclick="addNewPlayer()">Ajouter le joueur</button>
 </div>
 
@@ -326,14 +320,14 @@
 
 <button class="btn" onclick="generateGroups()">Lancer le Plouf Plouf</button>
 
-<div id="cheatContainer">
-    <h3>Mode Cheat Activé</h3>
+<div id="miguelContainer">
+    <h3>Mode Miguel Activé</h3>
     <div class="search-container">
-        <input type="text" id="cheatPlayerSearch" placeholder="Sélectionner un joueur..." oninput="suggestCheatPlayers()" autocomplete="off">
-        <div id="cheatSuggestions"></div>
+        <input type="text" id="miguelPlayerSearch" placeholder="Sélectionner un joueur..." oninput="suggestMiguelPlayers()" autocomplete="off">
+        <div id="miguelSuggestions"></div>
     </div>
-    <div id="cheatSelectedPlayers"></div>
-    <button class="btn" onclick="validateCheat()">Valider Cheat</button>
+    <div id="miguelSelectedPlayers"></div>
+    <button class="btn" onclick="validateMiguel()">Valider Miguel</button>
 </div>
 
 <div id="result"></div>
@@ -358,8 +352,8 @@
     let guildMembers = [];
     let selectedPlayers = [];
     let showDp = false;
-    let cheatMode = false;
-    let cheatPlayers = [];
+    let miguelMode = false;
+    let miguelPlayers = [];
 
     // Mapping des classes aux couleurs
     const classColors = {
@@ -375,7 +369,8 @@
         "Shaman": "#0070DE",
         "Warlock": "#9482C9",
         "Warrior": "#C79C6E",
-        "Evoker": "#33937F"
+        "Evoker": "#33937F",
+        "Unknown": "#FFFFFF"
     };
 
     async function fetchGuildMembers() {
@@ -399,7 +394,7 @@
                             return {
                                 name: characterData.name,
                                 realName: characterData.name,
-                                class: characterData.class,
+                                class: characterData.class || 'Unknown',
                                 classColor: classColor,
                                 role: characterData.active_spec_role ? characterData.active_spec_role.toLowerCase() : 'unknown',
                                 dp: Math.round(dpScore),
@@ -436,10 +431,10 @@
             member.role = (member.role || 'unknown').toLowerCase();
         });
 
-        // Ajouter un écouteur pour la touche "=" pour le mode Cheat
+        // Ajouter un écouteur pour la combinaison Maj + = pour le mode Miguel
         document.addEventListener('keydown', (event) => {
-            if (event.key === '=' && !event.target.matches('input, textarea')) {
-                toggleCheatMode();
+            if (event.key === '=' && event.shiftKey && !event.target.matches('input, textarea')) {
+                toggleMiguelMode();
             }
         });
     }
@@ -500,7 +495,7 @@
             div.appendChild(removeBtn);
 
             const img = document.createElement('img');
-            img.src = player.thumbnail_url || 'https://via.placeholder.com/100';
+            img.src = player.thumbnail_url || 'default.jpg';
             div.appendChild(img);
 
             const nameSpan = document.createElement('div');
@@ -576,10 +571,10 @@
             players.sort(() => Math.random() - 0.5);
         }
 
-        // Si le mode Cheat est activé, placer les joueurs cheatés dans le premier groupe
-        if (cheatPlayers.length > 0) {
+        // Si le mode Miguel est activé, placer les joueurs dans le premier groupe
+        if (miguelPlayers.length > 0) {
             const group = groups[0];
-            cheatPlayers.forEach(playerName => {
+            miguelPlayers.forEach(playerName => {
                 const player = players.find(p => p.name === playerName);
                 if (player) {
                     // Ajouter le joueur au groupe
@@ -596,9 +591,9 @@
                     players.splice(players.indexOf(player), 1);
                 }
             });
-            cheatPlayers = []; // Réinitialiser le mode cheat
-            cheatMode = false;
-            document.getElementById('cheatContainer').style.display = 'none';
+            miguelPlayers = []; // Réinitialiser le mode miguel
+            miguelMode = false;
+            document.getElementById('miguelContainer').style.display = 'none';
         }
 
         // Répartir les joueurs restants
@@ -742,52 +737,62 @@
         const name = document.getElementById('newPlayerName').value.trim();
         const role = document.getElementById('newPlayerRole').value;
         const dp = parseInt(document.getElementById('newPlayerRio').value) || 0;
-        const secondaryRole = document.getElementById('newPlayerSecondaryRole').value;
 
         if (!name || !role) {
             alert('Veuillez renseigner au moins le nom et le rôle principal du joueur.');
             return;
         }
 
+        // Vérifier si le joueur existe déjà
+        if (guildMembers.some(member => member.name === name)) {
+            alert('Un joueur avec ce nom existe déjà.');
+            return;
+        }
+
         // Ajouter le joueur à la liste des membres
-        guildMembers.push({
+        const newPlayer = {
             name: name,
             realName: name,
             class: 'Unknown',
-            classColor: '#FFFFFF',
+            classColor: classColors['Unknown'],
             role: role,
             dp: dp,
-            thumbnail_url: 'https://via.placeholder.com/100'
-        });
+            thumbnail_url: 'default.jpg'
+        };
+        guildMembers.push(newPlayer);
 
         alert(`Joueur ${name} ajouté avec succès.`);
+
+        // Ajouter le joueur à la sélection
+        selectedPlayers.push(name);
+        displaySelectedPlayers();
+
         // Réinitialiser le formulaire
         document.getElementById('newPlayerName').value = '';
         document.getElementById('newPlayerRole').value = '';
         document.getElementById('newPlayerRio').value = '';
-        document.getElementById('newPlayerSecondaryRole').value = '';
     }
 
-    function toggleCheatMode() {
-        cheatMode = !cheatMode;
-        const cheatContainer = document.getElementById('cheatContainer');
-        cheatContainer.style.display = cheatMode ? 'block' : 'none';
-        cheatPlayers = [];
-        document.getElementById('cheatSelectedPlayers').innerHTML = '';
-        document.getElementById('cheatPlayerSearch').value = '';
-        document.getElementById('cheatSuggestions').innerHTML = '';
+    function toggleMiguelMode() {
+        miguelMode = !miguelMode;
+        const miguelContainer = document.getElementById('miguelContainer');
+        miguelContainer.style.display = miguelMode ? 'block' : 'none';
+        miguelPlayers = [];
+        document.getElementById('miguelSelectedPlayers').innerHTML = '';
+        document.getElementById('miguelPlayerSearch').value = '';
+        document.getElementById('miguelSuggestions').innerHTML = '';
     }
 
-    function suggestCheatPlayers() {
-        const input = document.getElementById('cheatPlayerSearch').value.toLowerCase();
-        const suggestionsDiv = document.getElementById('cheatSuggestions');
+    function suggestMiguelPlayers() {
+        const input = document.getElementById('miguelPlayerSearch').value.toLowerCase();
+        const suggestionsDiv = document.getElementById('miguelSuggestions');
         suggestionsDiv.innerHTML = '';
 
-        if (input.length === 0 || cheatPlayers.length >= 5) {
+        if (input.length === 0 || miguelPlayers.length >= 5) {
             return;
         }
 
-        const suggestions = guildMembers.filter(member => member.name.toLowerCase().includes(input) && !cheatPlayers.includes(member.name));
+        const suggestions = guildMembers.filter(member => member.name.toLowerCase().includes(input) && !miguelPlayers.includes(member.name));
 
         suggestions.forEach(member => {
             const div = document.createElement('div');
@@ -802,31 +807,31 @@
             nameSpan.style.color = member.classColor;
             div.appendChild(nameSpan);
 
-            div.onclick = () => selectCheatPlayer(member.name);
+            div.onclick = () => selectMiguelPlayer(member.name);
             suggestionsDiv.appendChild(div);
         });
     }
 
-    function selectCheatPlayer(playerName) {
-        if (cheatPlayers.length >= 5) {
-            alert('Vous ne pouvez pas ajouter plus de 5 joueurs en mode Cheat.');
+    function selectMiguelPlayer(playerName) {
+        if (miguelPlayers.length >= 5) {
+            alert('Vous ne pouvez pas ajouter plus de 5 joueurs en mode Miguel.');
             return;
         }
-        cheatPlayers.push(playerName);
-        displayCheatPlayers();
-        document.getElementById('cheatPlayerSearch').value = '';
-        document.getElementById('cheatSuggestions').innerHTML = '';
+        miguelPlayers.push(playerName);
+        displayMiguelPlayers();
+        document.getElementById('miguelPlayerSearch').value = '';
+        document.getElementById('miguelSuggestions').innerHTML = '';
     }
 
-    function displayCheatPlayers() {
-        const cheatSelectedDiv = document.getElementById('cheatSelectedPlayers');
-        cheatSelectedDiv.innerHTML = '';
+    function displayMiguelPlayers() {
+        const miguelSelectedDiv = document.getElementById('miguelSelectedPlayers');
+        miguelSelectedDiv.innerHTML = '';
 
-        cheatPlayers.forEach(playerName => {
+        miguelPlayers.forEach(playerName => {
             const player = guildMembers.find(member => member.name === playerName);
 
             const div = document.createElement('div');
-            div.className = 'cheat-player';
+            div.className = 'miguel-player';
 
             const img = document.createElement('img');
             img.src = player.thumbnail_url || 'https://via.placeholder.com/40';
@@ -842,24 +847,24 @@
             nameSpan.style.marginTop = '5px';
             div.appendChild(nameSpan);
 
-            cheatSelectedDiv.appendChild(div);
+            miguelSelectedDiv.appendChild(div);
         });
     }
 
-    function validateCheat() {
-        if (cheatPlayers.length === 0) {
-            alert('Veuillez sélectionner au moins un joueur pour le mode Cheat.');
+    function validateMiguel() {
+        if (miguelPlayers.length === 0) {
+            alert('Veuillez sélectionner au moins un joueur pour le mode Miguel.');
             return;
         }
 
-        // Ajouter les joueurs cheatés à la sélection principale s'ils ne le sont pas déjà
-        cheatPlayers.forEach(playerName => {
+        // Ajouter les joueurs miguel à la sélection principale s'ils ne le sont pas déjà
+        miguelPlayers.forEach(playerName => {
             if (!selectedPlayers.includes(playerName)) {
                 selectedPlayers.push(playerName);
             }
         });
         displaySelectedPlayers();
-        // Mode Cheat activé, les joueurs seront placés ensemble au prochain tirage
+        // Les joueurs seront placés ensemble au prochain tirage
     }
 
     // Initialiser l'application
