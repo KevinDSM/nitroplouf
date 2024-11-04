@@ -468,7 +468,7 @@
         });
 
         document.addEventListener('keydown', (event) => {
-            if (event.key === '=' && event.shiftKey && !event.target.matches('input, textarea')) {
+            if (event.key === '=' && !event.target.matches('input, textarea')) {
                 toggleMiguelMode();
             }
         });
