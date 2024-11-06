@@ -274,20 +274,31 @@
             text-align: center;
             color: var(--primary-color);
         }
-        .group table {
-            width: 100%;
-            border-collapse: collapse;
+        .group-players {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .group th, .group td {
+        .group-player {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
             padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            margin: 10px;
+            width: 180px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
         }
-        .group th {
-            background-color: var(--background-color);
+        .group-player img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 10px;
         }
-        .group tr:nth-child(even) {
-            background-color: var(--background-color);
+        .group-player div {
+            margin-bottom: 5px;
         }
         #upcomingFeatures {
             margin-top: 40px;
@@ -308,12 +319,12 @@
             padding-left: 20px;
         }
         #downloadLink {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
             text-decoration: none;
             color: var(--primary-color);
             font-weight: bold;
+            display: block;
+            text-align: center;
+            margin-top: 20px;
         }
         #downloadLink:hover {
             color: var(--primary-color-dark);
@@ -338,6 +349,7 @@
     <label><input type="checkbox" id="showRioCheckbox" onchange="toggleShowRio()"> RIO</label>
     <label><input type="checkbox" id="equilibrateCheckbox"> Équilibre</label>
     <label><input type="checkbox" id="addPlayerCheckbox" onchange="toggleAddPlayerForm()"> Ajouter</label>
+    <label><input type="checkbox" id="gifsCheckbox"> Gifs</label>
 </div>
 
 <div id="addPlayerForm">
@@ -565,6 +577,7 @@
         }
 
         const equilibrate = document.getElementById('equilibrateCheckbox').checked;
+        const useGifs = document.getElementById('gifsCheckbox').checked;
 
         const players = selectedPlayers.map(playerName => guildMembers.find(member => member.name === playerName));
 
@@ -668,64 +681,48 @@
             groupTitle.textContent = `Groupe ${index + 1}`;
             groupDiv.appendChild(groupTitle);
 
-            const table = document.createElement('table');
+            const playersDiv = document.createElement('div');
+            playersDiv.className = 'group-players';
 
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            const thName = document.createElement('th');
-            thName.textContent = 'Joueur';
-            const thRole = document.createElement('th');
-            thRole.textContent = 'Rôle';
-            headerRow.appendChild(thName);
-            headerRow.appendChild(thRole);
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-            const tbody = document.createElement('tbody');
+            group.members.forEach(player => {
+                const playerDiv = document.createElement('div');
+                playerDiv.className = 'group-player';
 
-            if (group.Tank) {
-                const row = document.createElement('tr');
-                const cellName = document.createElement('td');
-                cellName.textContent = group.Tank.name;
-                cellName.style.color = group.Tank.classColor;
-                row.appendChild(cellName);
+                const img = document.createElement('img');
 
-                const cellRole = document.createElement('td');
-                cellRole.textContent = 'Tank';
-                row.appendChild(cellRole);
+                if (useGifs) {
+                    const randomNumber = Math.floor(Math.random() * 5) + 1;
+                    img.src = `gifs/${player.name}/${randomNumber}.gif`;
+                    img.onerror = function() {
+                        this.onerror = null;
+                        this.src = player.thumbnail_url || 'default.jpg';
+                    };
+                } else {
+                    img.src = player.thumbnail_url || 'default.jpg';
+                }
 
-                tbody.appendChild(row);
-            }
+                playerDiv.appendChild(img);
 
-            if (group.Healer) {
-                const row = document.createElement('tr');
-                const cellName = document.createElement('td');
-                cellName.textContent = group.Healer.name;
-                cellName.style.color = group.Healer.classColor;
-                row.appendChild(cellName);
+                const nameSpan = document.createElement('div');
+                nameSpan.textContent = player.name;
+                nameSpan.style.color = player.classColor;
+                nameSpan.style.fontWeight = 'bold';
+                playerDiv.appendChild(nameSpan);
 
-                const cellRole = document.createElement('td');
-                cellRole.textContent = 'Heal';
-                row.appendChild(cellRole);
+                const roleSpan = document.createElement('div');
+                roleSpan.textContent = `Rôle : ${player.role}`;
+                playerDiv.appendChild(roleSpan);
 
-                tbody.appendChild(row);
-            }
+                if (showDp) {
+                    const dpSpan = document.createElement('div');
+                    dpSpan.textContent = `Score RIO : ${player.dp}`;
+                    playerDiv.appendChild(dpSpan);
+                }
 
-            group.DPS.forEach(player => {
-                const row = document.createElement('tr');
-                const cellName = document.createElement('td');
-                cellName.textContent = player.name;
-                cellName.style.color = player.classColor;
-                row.appendChild(cellName);
-
-                const cellRole = document.createElement('td');
-                cellRole.textContent = 'DPS';
-                row.appendChild(cellRole);
-
-                tbody.appendChild(row);
+                playersDiv.appendChild(playerDiv);
             });
 
-            table.appendChild(tbody);
-            groupDiv.appendChild(table);
+            groupDiv.appendChild(playersDiv);
 
             if (equilibrate) {
                 const totalDpDiv = document.createElement('div');
