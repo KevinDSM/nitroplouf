@@ -210,9 +210,9 @@
         .selected-player img {
             width: 100px;
             height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
+            object-fit: contain;
             margin: 0 auto 10px auto;
+            /* Retiré: border-radius: 50%; */
         }
         .remove-player {
             position: absolute;
@@ -294,9 +294,12 @@
         .group-player img {
             width: 180px; /* Augmenté pour une meilleure visibilité des gifs */
             height: 180px;
-            object-fit: cover;
-            border-radius: 50%;
+            object-fit: contain;
             margin-bottom: 10px;
+            /* Retiré: border-radius: 50%; */
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         .group-player div {
             margin-bottom: 5px;
