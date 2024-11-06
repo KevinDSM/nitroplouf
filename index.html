@@ -5,6 +5,7 @@
     <title>NITROPLOUF</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- La ligne de favicon a été supprimée pour éviter l'erreur -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -285,14 +286,14 @@
             border-radius: var(--border-radius);
             padding: 10px;
             margin: 10px;
-            width: 180px;
+            width: 240px; /* Augmenté pour accueillir les images plus grandes */
             text-align: center;
             box-shadow: 0 8px 15px rgba(0,0,0,0.1);
             transition: background-color 0.3s, color 0.3s;
         }
         .group-player img {
-            width: 100px;
-            height: 100px;
+            width: 180px; /* Augmenté pour une meilleure visibilité des gifs */
+            height: 180px;
             object-fit: cover;
             border-radius: 50%;
             margin-bottom: 10px;
@@ -389,7 +390,6 @@
 <div id="upcomingFeatures">
     <h2>Prochaines fonctionnalités</h2>
     <ul>
-        <li>Le mode gif</li>
         <li>Sons personnalisés</li>
         <li>Une section "trend" pour les retardataires qui n'ont jamais les références</li>
         <li>Et bien plus encore</li>
@@ -419,7 +419,7 @@
         "Mage": "#69CCF0",
         "Monk": "#00FF96",
         "Paladin": "#F58CBA",
-        "Priest": "#AAAAAA",
+        "Priest": "#FFFFFF",
         "Rogue": "#FFF569",
         "Shaman": "#0070DE",
         "Warlock": "#9482C9",
@@ -427,6 +427,10 @@
         "Evoker": "#33937F",
         "Unknown": "#000000"
     };
+
+    function normalizeName(name) {
+        return name.replace(/\s+/g, '');
+    }
 
     async function fetchGuildMembers() {
         try {
@@ -692,7 +696,8 @@
 
                 if (useGifs) {
                     const randomNumber = Math.floor(Math.random() * 5) + 1;
-                    img.src = `gifs/${player.name}/${randomNumber}.gif`;
+                    const playerNameNormalized = normalizeName(player.name);
+                    img.src = `${playerNameNormalized}/${randomNumber}.gif`;
                     img.onerror = function() {
                         this.onerror = null;
                         this.src = player.thumbnail_url || 'default.jpg';
