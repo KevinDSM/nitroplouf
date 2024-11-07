@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>NITROPLOUF</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- La ligne de favicon a été supprimée pour éviter l'erreur -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -65,21 +64,23 @@
             gap: 10px;
             margin-bottom: 20px;
         }
+        /* Modifications des boutons */
         #toggleDarkMode, #toggleGirlMode {
-            background-color: var(--primary-color);
-            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             border: none;
-            padding: 8px 12px;
-            font-size: 16px;
-            border-radius: var(--border-radius);
             cursor: pointer;
+            margin-right: 10px;
             transition: background-color 0.3s;
-            width: 120px;
-            text-align: left;
         }
-        #toggleDarkMode:hover, #toggleGirlMode:hover {
-            background-color: var(--primary-color-dark);
+        #toggleDarkMode {
+            background-color: #000000; /* Noir pour le bouton du mode sombre */
         }
+        #toggleGirlMode {
+            background-color: #ffc0cb; /* Rose pour le bouton du mode fille */
+        }
+        /* Le reste du CSS reste inchangé */
         #addPlayerForm {
             display: none;
             margin: 0 auto 20px auto;
@@ -212,7 +213,6 @@
             height: 100px;
             object-fit: contain;
             margin: 0 auto 10px auto;
-            /* Retiré: border-radius: 50%; */
         }
         .remove-player {
             position: absolute;
@@ -296,7 +296,6 @@
             height: 180px;
             object-fit: contain;
             margin-bottom: 10px;
-            /* Retiré: border-radius: 50%; */
             display: block;
             margin-left: auto;
             margin-right: auto;
@@ -343,8 +342,8 @@
 <body>
 
 <div class="mode-buttons">
-    <button id="toggleDarkMode" onclick="toggleDarkMode()">Mode Sombre</button>
-    <button id="toggleGirlMode" onclick="toggleGirlMode()">Mode Fille</button>
+    <button id="toggleDarkMode" onclick="toggleDarkMode()"></button>
+    <button id="toggleGirlMode" onclick="toggleGirlMode()"></button>
 </div>
 
 <h1>NITROPLOUF</h1>
@@ -471,26 +470,71 @@
 
                 const validMembers = detailedMembers.filter(member => member !== null);
 
-                return validMembers;
+                guildMembers = validMembers;
+                guildMembers.forEach(member => {
+                    member.role = (member.role || 'unknown').toLowerCase();
+                });
+
             } else {
-                return [];
+                guildMembers = [];
             }
         } catch (error) {
-            return [];
+            guildMembers = [];
         }
     }
 
     async function initialize() {
-        guildMembers = await fetchGuildMembers();
-        guildMembers.forEach(member => {
-            member.role = (member.role || 'unknown').toLowerCase();
-        });
+        await fetchGuildMembers();
 
         document.addEventListener('keydown', (event) => {
             if (event.key === '=' && !event.target.matches('input, textarea')) {
                 toggleMiguelMode();
             }
         });
+
+        // Définir les couleurs initiales des boutons
+        document.getElementById('toggleDarkMode').style.backgroundColor = '#000000';
+        document.getElementById('toggleGirlMode').style.backgroundColor = '#ffc0cb';
+    }
+
+    function toggleDarkMode() {
+        darkMode = !darkMode;
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('girl-mode');
+            girlMode = false;
+            // Mettre à jour la couleur du bouton
+            document.getElementById('toggleDarkMode').style.backgroundColor = '#ffffff'; // Blanc lorsqu'activé
+            document.getElementById('toggleGirlMode').style.backgroundColor = '#ffc0cb'; // Réinitialiser le bouton du mode fille
+        } else {
+            document.body.classList.remove('dark-mode');
+            document.getElementById('toggleDarkMode').style.backgroundColor = '#000000'; // Noir lorsqu'inactif
+        }
+    }
+
+    function toggleGirlMode() {
+        girlMode = !girlMode;
+        if (girlMode) {
+            document.body.classList.add('girl-mode');
+            document.body.classList.remove('dark-mode');
+            darkMode = false;
+            // Mettre à jour la couleur du bouton
+            document.getElementById('toggleGirlMode').style.backgroundColor = '#ffffff'; // Blanc lorsqu'activé
+            document.getElementById('toggleDarkMode').style.backgroundColor = '#000000'; // Réinitialiser le bouton du mode sombre
+        } else {
+            document.body.classList.remove('girl-mode');
+            document.getElementById('toggleGirlMode').style.backgroundColor = '#ffc0cb'; // Rose lorsqu'inactif
+        }
+    }
+
+    function toggleShowRio() {
+        showDp = document.getElementById('showRioCheckbox').checked;
+        displaySelectedPlayers();
+    }
+
+    function toggleAddPlayerForm() {
+        const form = document.getElementById('addPlayerForm');
+        form.style.display = document.getElementById('addPlayerCheckbox').checked ? 'block' : 'none';
     }
 
     function suggestPlayers() {
@@ -743,16 +787,6 @@
         });
     }
 
-    function toggleShowRio() {
-        showDp = document.getElementById('showRioCheckbox').checked;
-        displaySelectedPlayers();
-    }
-
-    function toggleAddPlayerForm() {
-        const form = document.getElementById('addPlayerForm');
-        form.style.display = document.getElementById('addPlayerCheckbox').checked ? 'block' : 'none';
-    }
-
     function addNewPlayer() {
         const name = document.getElementById('newPlayerName').value.trim();
         const role = document.getElementById('newPlayerRole').value;
@@ -879,36 +913,6 @@
             }
         });
         displaySelectedPlayers();
-    }
-
-    function toggleDarkMode() {
-        darkMode = !darkMode;
-        if (darkMode) {
-            document.body.classList.add('dark-mode');
-            document.body.classList.remove('girl-mode');
-            girlMode = false;
-            const toggleGirlButton = document.getElementById('toggleGirlMode');
-            toggleGirlButton.textContent = 'Mode Fille';
-        } else {
-            document.body.classList.remove('dark-mode');
-        }
-        const toggleButton = document.getElementById('toggleDarkMode');
-        toggleButton.textContent = darkMode ? 'Mode Clair' : 'Mode Sombre';
-    }
-
-    function toggleGirlMode() {
-        girlMode = !girlMode;
-        if (girlMode) {
-            document.body.classList.add('girl-mode');
-            document.body.classList.remove('dark-mode');
-            darkMode = false;
-            const toggleDarkButton = document.getElementById('toggleDarkMode');
-            toggleDarkButton.textContent = 'Mode Sombre';
-        } else {
-            document.body.classList.remove('girl-mode');
-        }
-        const toggleButton = document.getElementById('toggleGirlMode');
-        toggleButton.textContent = girlMode ? 'Mode Normal' : 'Mode Fille';
     }
 
     initialize();
