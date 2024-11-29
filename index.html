@@ -7,8 +7,336 @@
     <!-- La ligne de favicon a été supprimée pour éviter l'erreur -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* Votre CSS reste inchangé */
-        /* ... (gardez le même code CSS que précédemment) ... */
+        :root {
+            --primary-color: #007bff;
+            --primary-color-dark: #0056b3;
+            --secondary-color: #6c757d;
+            --background-color: #f0f2f5;
+            --text-color: #333;
+            --border-color: #ccc;
+            --border-radius: 8px;
+            --font-family: 'Roboto', sans-serif;
+        }
+        body.dark-mode {
+            --background-color: #1e1e1e;
+            --text-color: #f0f2f5;
+            --border-color: #444;
+            --primary-color: #0d6efd;
+            --primary-color-dark: #0a58ca;
+        }
+        body.girl-mode {
+            --background-color: #ffc0cb;
+            --text-color: #800080;
+        }
+        body {
+            font-family: var(--font-family);
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .options-container label {
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .options-container input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .mode-buttons {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        /* Modifications des boutons */
+        #toggleDarkMode, #toggleGirlMode {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        #toggleDarkMode {
+            background-color: #000000; /* Noir pour le bouton du mode sombre */
+        }
+        #toggleGirlMode {
+            background-color: #ffc0cb; /* Rose pour le bouton du mode fille */
+        }
+        /* Le reste du CSS reste inchangé */
+        #addPlayerForm {
+            display: none;
+            margin: 0 auto 20px auto;
+            max-width: 400px;
+            background-color: var(--background-color);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #addPlayerForm h3 {
+            margin-top: 0;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        #addPlayerForm input[type="text"],
+        #addPlayerForm input[type="number"],
+        #addPlayerForm select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            outline: none;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #addPlayerForm button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #addPlayerForm button:hover {
+            background-color: var(--primary-color-dark);
+        }
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+        #playerSearch, #miguelPlayerSearch {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-sizing: border-box;
+            outline: none;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #playerSearch:focus, #miguelPlayerSearch:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(0,123,255,0.5);
+        }
+        #suggestions, #miguelSuggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .suggestion-item:hover {
+            background-color: var(--primary-color-dark);
+            color: #fff;
+        }
+        .suggestion-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .suggestion-item span {
+            font-size: 16px;
+        }
+        .selected-players {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .selected-player {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin: 10px;
+            width: 180px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+        }
+        .selected-player:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+        }
+        .selected-player img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin: 0 auto 10px auto;
+        }
+        .remove-player {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            color: red;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .selected-player div {
+            margin-bottom: 5px;
+        }
+        .btn {
+            display: block;
+            margin: 20px auto;
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            width: 200px;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: var(--primary-color-dark);
+        }
+        #miguelContainer {
+            display: none;
+            margin: 0 auto 20px auto;
+            max-width: 400px;
+            text-align: center;
+        }
+        #miguelSelectedPlayers {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .miguel-player {
+            margin: 5px;
+        }
+        #result {
+            margin-top: 30px;
+        }
+        .group {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .group h3 {
+            margin-top: 0;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        .group-players {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .group-player {
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin: 10px;
+            width: 240px; /* Augmenté pour accueillir les images plus grandes */
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .group-player img {
+            width: 180px; /* Augmenté pour une meilleure visibilité des gifs */
+            height: 180px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .group-player div {
+            margin-bottom: 5px;
+        }
+        #upcomingFeatures {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--background-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #upcomingFeatures h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        #upcomingFeatures ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        #downloadLink {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: bold;
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #downloadLink:hover {
+            color: var(--primary-color-dark);
+        }
+        #contactMessage {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
